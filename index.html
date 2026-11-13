@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JK MEDIA CORPORATION – AI Virtual Office</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#e8eff7;--pn:rgba(255,255,255,.94);--tx:#0b1b2b;--mt:#546a80;--ac:#0369a1;--ln:#c3d3e3;--ok:#15803d;--wn:#b45309}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#04070d;--pn:rgba(7,15,27,.93);--tx:#e6f4ff;--mt:#8aa4bd;--ac:#22d3ee;--ln:#17344f;--ok:#4ade80;--wn:#fbbf24}}
+:root[data-theme="dark"]{--bg:#04070d;--pn:rgba(7,15,27,.93);--tx:#e6f4ff;--mt:#8aa4bd;--ac:#22d3ee;--ln:#17344f;--ok:#4ade80;--wn:#fbbf24}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;position:relative;overflow:hidden;background:var(--bg);color:var(--tx);font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#hud{position:absolute;left:12px;top:10px;pointer-events:none}
+#hud b{display:block;font-size:15px;letter-spacing:.08em;color:var(--ac)}
+#hud small,small{color:var(--mt)}
+#p{position:absolute;right:10px;top:10px;bottom:10px;width:380px;max-width:calc(100% - 20px);background:var(--pn);border:1px solid var(--ln);border-radius:12px;overflow:auto;padding:10px}
+#p.min{bottom:auto;height:40px;overflow:hidden}
+@media (max-width:700px){#p{top:auto;left:10px;right:10px;width:auto;max-height:46%}#p.min{max-height:40px}}
+h4{margin:10px 0 4px;font-size:11px;letter-spacing:.08em;color:var(--mt);text-transform:uppercase}
+.row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+button{font:inherit;color:var(--tx);background:transparent;border:1px solid var(--ln);border-radius:8px;padding:6px 10px;cursor:pointer}
+button.pr{background:var(--ac);color:var(--bg);border-color:var(--ac);font-weight:600}
+textarea,input{width:100%;box-sizing:border-box;font:inherit;color:var(--tx);background:transparent;border:1px solid var(--ln);border-radius:8px;padding:6px}
+#ex{flex:1}details{border-bottom:1px solid var(--ln);padding:3px 0}summary{cursor:pointer}select{font:inherit;color:var(--tx);background:var(--pn);border:1px solid var(--ln);border-radius:6px;padding:3px;max-width:100%}
+#st{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.ch{padding:2px 7px;border:1px solid var(--ln);border-radius:99px;color:var(--mt);font-size:11px}
+.ch.on{border-color:var(--ac);color:var(--ac);font-weight:600}.ch.dn{color:var(--ok)}
+#ap{margin:6px 0}#ap[hidden]{display:none}
+.sf{display:grid;grid-template-columns:10px 1fr auto;gap:6px;align-items:center;padding:3px 4px;border-radius:6px;cursor:pointer}
+.sf:hover,.sf.s{background:rgba(34,211,238,.14)}
+.dt{width:8px;height:8px;border-radius:50%}
+.bar{height:4px;background:var(--ln);border-radius:3px;margin:3px 0}.bar i{display:block;height:100%;background:var(--ac);border-radius:3px}
+#sel{margin-top:8px}#si{padding:6px 0}
+#lg div{padding:2px 0;border-bottom:1px solid var(--ln);color:var(--mt)}#lg b{color:var(--tx)}
+.tg{font-size:10px;padding:1px 5px;border-radius:4px;background:var(--wn);color:var(--bg);font-weight:700}
+.nt{color:var(--wn);font-size:11px;margin:8px 0 0}
+table{border-collapse:collapse;width:100%;font-size:11px}td,th{border-bottom:1px solid var(--ln);padding:2px 4px;text-align:left;vertical-align:top}
+.tb{display:flex;gap:4px;margin:6px 0 8px;position:sticky;top:-10px;background:var(--pn);padding:4px 0;z-index:2}.tb button{flex:1;padding:5px 2px;font-size:12px}.tb button.on{border-color:var(--ac);color:var(--ac);font-weight:700}
+.rc{border:1px solid var(--ln);border-left:3px solid var(--ac);border-radius:8px;padding:6px 10px;margin:8px 0;overflow-x:auto}.rc summary{font-weight:700;cursor:pointer;margin-bottom:4px}.rc h5{margin:8px 0 2px;font-size:13px;color:var(--ac)}.rc p{margin:4px 0}.li{margin:2px 0 2px 4px}mark{background:#fde68a;color:#78350f;border-radius:3px;padding:0 3px}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="hud"><b>JK MEDIA CORPORATION</b><small>AI VIRTUAL OFFICE · kéo để xoay, cuộn để phóng to, nhấp vào nhân viên</small><small id="ck" style="display:block"></small></div>
+<aside id="p">
+<div class="row"><b>Trung tâm điều hành</b><button id="tg">Thu gọn</button></div>
+<div class="tb"><button data-t="vc" class="on">Công việc</button><button data-t="kq">Kết quả</button><button data-t="ls">Lịch sử</button><button data-t="cd">Cài đặt</button></div>
+<section id="t-vc">
+<h4>Yêu cầu của khách hàng</h4>
+<textarea id="rq" rows="3" placeholder="Bạn cần công ty chúng tôi thực hiện việc gì?"></textarea>
+<div class="row" style="margin-top:6px"><button id="at">📎 Đính kèm (tối đa 5 tệp)</button><input id="fl" type="file" multiple hidden accept=".txt,.md,.csv,.json,.html,.srt,.log,.pdf,.doc,.docx,image/*"></div>
+<div id="fli"></div>
+<div class="row" style="margin-top:6px"><button id="ex" class="pr">▶ Thực hiện</button><button id="nw">＋ Dự án mới</button></div>
+<div class="bar"><i id="pbi" style="width:0"></i></div><small id="pt">Chưa có dự án đang chạy</small>
+<div id="st"></div>
+<h4>Quá trình thực hiện (thời gian thực)</h4><div id="lg"></div>
+<div class="row" style="margin-top:8px"><button id="dm">Xem trình diễn hoạt ảnh</button><button id="ac">Camera tự động: tắt</button></div>
+<h4>Nhân sự (nhấp để xem, đổi tên, giao việc)</h4><div id="ls"></div>
+<div id="sel"></div>
+<p class="nt">Kết quả hiện ở tab “Kết quả”. AI viết văn bản thật. Hình ảnh, video, đăng bài thật: CHƯA tích hợp. “Xem trình diễn” chỉ là hoạt ảnh.</p>
+</section>
+<section id="t-kq" hidden><div id="rp"></div></section>
+<section id="t-ls" hidden><h4>Lịch sử dự án</h4><input id="hs" placeholder="Tìm dự án…"><div id="hl"></div><small id="hm">Đang kiểm tra nơi lưu…</small><div id="hv"></div></section>
+<section id="t-cd" hidden>
+<h4>Giao diện &amp; ngôn ngữ</h4>
+<div class="sf" style="grid-template-columns:1fr 1fr"><span>Chế độ</span><select id="sTh"><option value="auto">Theo thiết bị</option><option value="light">Sáng</option><option value="dark">Tối</option></select></div>
+<div class="sf" style="grid-template-columns:1fr 1fr"><span>Màu chủ đạo</span><select id="sAc"><option value="">Mặc định</option><option value="#0891b2">Xanh cyan</option><option value="#2563eb">Xanh dương</option><option value="#dc2626">Đỏ ninja</option><option value="#16a34a">Xanh lá</option><option value="#7c3aed">Tím</option></select></div>
+<div class="sf" style="grid-template-columns:1fr 1fr"><span>Ngôn ngữ AI viết kết quả</span><select id="sLn"><option value="tiếng Việt">Tiếng Việt</option><option value="English">English</option><option value="日本語">日本語</option></select></div>
+<small>Giao diện hiện chỉ có tiếng Việt; ngôn ngữ này áp dụng cho nội dung AI viết.</small>
+<h4>Công cụ AI, API &amp; tích hợp</h4><div id="ig"></div>
+</section>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const $=s=>document.querySelector(s),R=$('#c'),DK=matchMedia('(prefers-color-scheme:dark)').matches;
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const ren=new THREE.WebGLRenderer({canvas:R,antialias:true});ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;ren.setPixelRatio(Math.min(devicePixelRatio,2));
+const sc=new THREE.Scene();sc.background=new THREE.Color(DK?0x0f1b33:0xbfe3ff);
+const cam=new THREE.PerspectiveCamera(45,1,.1,300);cam.position.set(44,58,76);
+const oc=new THREE.OrbitControls(cam,R);oc.maxPolarAngle=1.45;oc.minDistance=6;oc.maxDistance=150;oc.enableDamping=true;
+sc.add(new THREE.HemisphereLight(0xfff1d6,0x3b4a3a,1));const dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(20,40,12);dl.castShadow=true;dl.shadow.mapSize.set(2048,2048);dl.shadow.bias=-.0005;Object.assign(dl.shadow.camera,{left:-62,right:62,top:62,bottom:-62,far:120});sc.add(dl);
+function resize(){const w=R.clientWidth,h=R.clientHeight;ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+const TG=new THREE.DataTexture(new Uint8Array([95,175,255]),3,1,ren.capabilities.isWebGL2?THREE.RedFormat:THREE.LuminanceFormat);TG.minFilter=TG.magFilter=THREE.NearestFilter;TG.needsUpdate=true;
+const M=(c,o)=>{const q=Object.assign({color:c,gradientMap:TG},o);delete q.roughness;delete q.metalness;return new THREE.MeshToonMaterial(q)};
+const GC={};
+function rg(w,h,d){const k=w+','+h+','+d;if(GC[k])return GC[k];const r=Math.min(w,h,d)*.25,x=Math.max(w/2-r,.001),y=Math.max(h/2-r,.001),c=Math.min(x,y)*.6,s=new THREE.Shape();
+ s.moveTo(-x+c,-y);s.lineTo(x-c,-y);s.quadraticCurveTo(x,-y,x,-y+c);s.lineTo(x,y-c);s.quadraticCurveTo(x,y,x-c,y);s.lineTo(-x+c,y);s.quadraticCurveTo(-x,y,-x,y-c);s.lineTo(-x,-y+c);s.quadraticCurveTo(-x,-y,-x+c,-y);
+ const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(d-2*r,.002),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:3,curveSegments:3});g.translate(0,0,-Math.max(d-2*r,.002)/2);return GC[k]=g}
+function box(w,h,d,c,x,y,z,p,o){const m=new THREE.Mesh(rg(w,h,d),M(c,o));m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;(p||sc).add(m);return m}
+function label(t,col,sx,dt){const c=document.createElement('canvas');c.width=512;c.height=96;const g=c.getContext('2d');g.font='bold 34px sans-serif';g.textAlign='center';g.fillStyle='rgba(4,10,18,.8)';g.fillRect(0,8,512,80);g.fillStyle=col;g.fillText(t,256,60);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:!!dt}));s.scale.set(sx,sx*96/512,1);return s}
+// ===== Văn phòng =====
+const GR1=box(170,.1,170,DK?0x14301f:0x4f8f4a,0,-.1,0),GR2=box(48,.1,48,DK?0x4a3a2a:0xb8955f,0,-.04,0);
+for(let k=0;k<30;k++){const an=k*2.399,r=58+(k%5)*3,t=new THREE.Group();t.position.set(Math.cos(an)*r,0,Math.sin(an)*r);sc.add(t);box(.5,2.2,.5,0x6b4423,0,1.1,0,t);[[3.4,2.6,0x2f7d3a],[2.4,4.4,0x3b9a47]].forEach(q=>{const m=new THREE.Mesh(new THREE.SphereGeometry(q[0]*.6,16,12),M(q[2]));m.position.y=q[1]+.8;t.add(m)})}
+for(let k=0;k<6;k++){const m=new THREE.Mesh(new THREE.SphereGeometry(16+k*2,24,16),M(DK?0x1e3b36:0x6fa287));m.scale.y=.7;m.position.set(-60+k*24,0,-58-(k%2)*6);sc.add(m)}
+[-10,0,10].forEach(x=>[-5,5].forEach(z=>{box(.12,2.2,.12,0x3b2a1a,x+.7,1.1,z+.7);box(.45,.55,.45,0xdc2626,x+.7,2.3,z+.7,null,{emissive:0xff6a00,emissiveIntensity:1})}));
+const P=10,rk=[],RM=[['PHÒNG CEO',0x38bdf8],['CREATIVE DIRECTOR',0x6d8cff],['MARKETING',0x3b82f6],['CONTENT',0x22d3ee],['GRAPHIC DESIGN',0x6366f1],['VIDEO PRODUCTION',0x06b6d4],['SEO & WEBSITE',0x2dd4bf],['ADVERTISING',0x0ea5e9],['LỄ TÂN',0x7dd3fc],['BUSINESS & CSKH',0x60a5fa],['QC & MEETING',0x818cf8],['KHU NGHỈ',0x475569]];
+const gl={transparent:true,opacity:.2,emissive:0x22d3ee,emissiveIntensity:.3};
+function desk(x,z){const g=new THREE.Group();g.position.set(x,0,z);sc.add(g);
+ box(1.8,.08,.8,0x8b5a2b,0,.75,0,g);box(.08,.75,.7,0x4a2f1a,-.8,.37,0,g);box(.08,.75,.7,0x4a2f1a,.8,.37,0,g);
+ box(.8,.5,.05,0x05080f,0,1.15,-.2,g,{emissive:0x22d3ee,emissiveIntensity:.55});box(.12,.3,.1,0x0b1a2b,0,.92,-.2,g);
+ box(.6,.08,.6,0x991b1b,0,.45,.9,g);box(.6,.6,.08,0x7f1d1d,0,.8,1.2,g)}
+RM.forEach((r,i)=>{const x=(i%4-1.5)*P,z=(Math.floor(i/4)-1)*P;r.x=x;r.z=z;
+ (rk[i]=box(8.6,.1,8.6,0xcdb98a,x,.06,z,null,{roughness:.9})).userData.r=i;box(.9,1.4,.06,r[1],x+3.4,1.5,z-4.1,null,{emissive:r[1],emissiveIntensity:.35});
+ const wd={roughness:.9};box(8.6,2.4,.15,0x8a5a32,x,1.2,z-4.3,null,wd);box(.15,2.4,2.8,0x8a5a32,x-4.3,1.2,z-2.9,null,wd);box(.15,2.4,2.8,0x8a5a32,x-4.3,1.2,z+2.9,null,wd);[[-4.3,-4.3],[4.3,-4.3],[-4.3,4.3],[4.3,4.3]].forEach(q=>box(.3,3,.3,0xb91c1c,x+q[0],1.5,z+q[1]));const rf=box(9.6,.25,3,0x334155,x,3.0,z-3.9);rf.rotation.x=.38;
+ const l=label(r[0],'#fde68a',5,1);l.position.set(x,4.3,z-4.3);sc.add(l)});
+RM.forEach((r,i)=>{if(i===8||i===11)return;desk(r.x+(i===10?-3.2:0),r.z-1.6)});
+{const m=RM[10],f=RM[8],l=RM[11];box(2.4,.08,1.6,0x8b5a2b,m.x,.75,m.z+1);box(.3,.75,.3,0x0b1a2b,m.x,.37,m.z+1);box(4.5,1.8,.06,0x05080f,m.x,1.6,m.z-4.2,null,{emissive:0x0ea5e9,emissiveIntensity:.45});
+ box(3.2,1,.8,0x0b1a2b,f.x,.5,f.z+1,null,{emissive:0x22d3ee,emissiveIntensity:.15});box(2.6,.05,.6,0x22d3ee,f.x,1.02,f.z+1,null,{emissive:0x22d3ee,emissiveIntensity:.8});
+ const g=label('JK MEDIA CORPORATION','#fde68a',8,1);g.position.set(f.x,5.4,f.z-4.2);sc.add(g);
+ box(3,.5,1,0x1e3a5f,l.x-2,.25,l.z-2);box(1.2,.4,1.2,0x0b1a2b,l.x+1.5,.2,l.z+1)}
+const cy=(rt,rb,h,c,x,y,z,o)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,18),M(c,o));m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;sc.add(m);return m},sp=(r,c,x,y,z,o)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),M(c,o));m.position.set(x,y,z);m.castShadow=true;sc.add(m);return m};
+function zone(n,x,z,c,fn){box(10,.2,8,0xcdb98a,x,.1,z);box(10,2.4,.2,0x8a5a32,x,1.3,z-3.9);const rf=box(10.6,.25,3.2,c,x,3,z-3.1);rf.rotation.x=.38;[[-4.8,-3.8],[4.8,-3.8]].forEach(q=>cy(.15,.15,3,0xb91c1c,x+q[0],1.5,z+q[1]));const l=label(n,'#fde68a',4.6,1);l.position.set(x,4.6,z-3.9);sc.add(l);fn(x,z)}
+const tbl=(x,z)=>{cy(.7,.7,.1,0x8b5a2b,x,.8,z);cy(.1,.1,.8,0x4a2f1a,x,.4,z);[-1,1].forEach(k=>cy(.28,.28,.4,0xdc2626,x+k,.25,z))};
+zone('QUÁN CÀ PHÊ',-40,-14,0x6b4423,(x,z)=>{box(5,1,.9,0x6b4423,x,.5,z-2.6);sp(.2,0xfff7ed,x-1,1.2,z-2.6);sp(.2,0xfff7ed,x+1,1.2,z-2.6);tbl(x-2.5,z+.5);tbl(x+2,z+1)});
+zone('TRÀ SỮA',-40,14,0xec4899,(x,z)=>{box(5,1,.9,0xf9a8d4,x,.5,z-2.6);cy(.5,.4,1.3,0xfbcfe8,x,1.65,z-2.6);cy(.05,.05,.8,0xf472b6,x+.2,2.7,z-2.6);tbl(x-2.5,z+.5);tbl(x+2,z+1)});
+zone('QUÁN ĂN',40,-14,0xb91c1c,(x,z)=>{box(6,.1,1.6,0x8b5a2b,x,.8,z);[-1,1].forEach(k=>box(6,.4,.5,0x4a2f1a,x,.4,z+k*1.3));[-2,0,2].forEach(k=>sp(.28,0xfef3c7,x+k,1,z))});
+zone('QUÁN NHẬU',40,14,0x7c2d12,(x,z)=>{tbl(x-2.6,z);tbl(x,z+1);tbl(x+2.6,z);[-3,0,3].forEach(k=>sp(.35,0xdc2626,x+k,2.4,z-2.4,{emissive:0xff6a00,emissiveIntensity:1}));cy(.5,.5,1,0x7c4a21,x+4,.5,z-2.5)});
+{const x=0,z=38;box(14,.2,9,0x2563eb,x,.1,z);[-4.5,4.5].forEach(q=>box(14,.05,.12,0xffffff,x,.22,z+q));[-7,0,7].forEach(q=>box(.12,.05,9,0xffffff,x+q,.22,z));box(.1,.9,9,0xf1f5f9,x,.7,z,null,{transparent:true,opacity:.5});[-4.5,4.5].forEach(q=>cy(.08,.08,1.1,0x334155,x,.55,z+q));const l=label('SÂN PICKLEBALL','#fde68a',4.6,1);l.position.set(x,3,z-5.4);sc.add(l)}
+const CL=[],NP=[];for(let k=0;k<7;k++){const c=new THREE.Group();CL.push(c);c.position.set(-70+k*24,34+(k%3)*5,-30+(k%2)*40);sc.add(c);[[0,0,0,5],[4,-.5,1,4],[-4,-.5,-1,3.5]].forEach(q=>{const m=new THREE.Mesh(new THREE.SphereGeometry(q[3],12,10),M(0xffffff));m.position.set(q[0],q[1],q[2]);m.scale.y=.6;c.add(m)})}
+// ===== Nhân sự =====
+const D0=[['Nguyễn Minh Khôi','CEO / Giám đốc điều hành','Chiến lược, điều phối, phê duyệt',0,0,0x0b4f8a],
+['Trần Bảo Châu','Giám đốc sáng tạo','Ý tưởng, định hướng hình ảnh & thông điệp',2,-2,0x6d28d9],
+['Lê Hoàng Nam','Trưởng phòng Marketing','Phân tích thị trường, chiến lược truyền thông',1,-2,0x0369a1],
+['Phạm Thu Hà','Chuyên viên Content','Bài Facebook/TikTok/Web, kịch bản video',2,2,0x0e7490],
+['Võ Anh Tuấn','Chuyên viên Thiết kế đồ họa','Poster, banner, nhận diện thương hiệu',3,0,0x4338ca],
+['Đặng Quốc Việt','Chuyên viên Video / Editor','Ý tưởng video, dựng, phụ đề, hiệu ứng',5,0,0x0891b2],
+['Bùi Ngọc Lan','Chuyên viên SEO & Website','Từ khóa, bài chuẩn SEO, Google Business',6,0,0x0f766e],
+['Hồ Gia Huy','Chuyên viên Ads','Chiến dịch quảng cáo, tối ưu hiệu quả',1,2,0x1d4ed8],
+['Ngô Mai Anh','Kinh doanh & Chăm sóc khách hàng','Tiếp nhận yêu cầu, theo dõi tiến độ',7,0,0x2563eb],
+['Đỗ Thanh Sơn','Trưởng phòng QC','Kiểm tra nội dung, thiết kế, video',8,0,0x312e81]];
+const pick=[],DC={work:0x22d3ee,walk:0xfbbf24,meet:0x60a5fa,present:0xa78bfa,idle:0x64748b,done:0x4ade80,fin:0x22c55e},
+ST={work:'Đang làm việc',walk:'Đang di chuyển',meet:'Đang họp',present:'Đang trình bày',idle:'Chờ việc',done:'Xong trình diễn',fin:'Hoàn thành (thật)'};
+const ST2=[[0xe8e8f0,1,0x7f1d1d,0xfbbf24,0],[0x7c3aed,2,0x5b21b6,0xe9d5ff,3],[0x14b8a6,0,0x0f3d3a,0xf59e0b,1],[0x86efac,4,0x166534,0xfef08a,4],[0x111827,3,0x1f2937,0xdc2626,3],[0x2563eb,0,0x1e3a8a,0x38bdf8,1],[0x78350f,0,0x44403c,0x84cc16,4],[0xea580c,5,0x7c2d12,0xfde68a,0],[0xca8a04,4,0x0f766e,0xf8fafc,0],[0x1f2937,0,0x4b5563,0x22d3ee,1]];
+const H=[0,1,2,3,4,5,6,7,9,10],A=D0.map((d,i)=>({i,n:d[0],t:d[1],sp:d[2],h:H[i],room:H[i],dx:i===9?-3.2:0,c:ST2[i][2],mode:'idle',seat:true,prog:0,task:'',tq:[],hist:[]}));
+const MG=(c,o)=>M(c,o),OLM=new THREE.MeshBasicMaterial({color:0x151018,side:THREE.BackSide}),EY=[0x60a5fa,0x8b5cf6,0x14b8a6,0x22c55e,0x334155,0x2563eb,0x92400e,0xf97316,0xb45309,0x64748b];
+function person(a){const g=new THREE.Group(),[hc,st,oc,sc2,ex]=ST2[a.i],sk=[0xffdcb8,0xf5c29a,0xd9a073][a.i%3];
+ const mk=(geo,col,x,y,z,p,sx,sy,sz,o)=>{const m=new THREE.Mesh(geo,MG(col,o));m.position.set(x,y,z);if(sx)m.scale.set(sx,sy,sz);m.castShadow=true;m.userData.i=a.i;pick.push(m);const ol=new THREE.Mesh(geo,OLM);ol.scale.setScalar(1.06);m.add(ol);(p||g).add(m);return m};
+ const S=(r,col,x,y,z,p,sx,sy,sz,o)=>mk(new THREE.SphereGeometry(r,20,14),col,x,y,z,p,sx,sy,sz,o);
+ const T=(r,tb,col,x,y,z,p,rx)=>{const m=mk(new THREE.TorusGeometry(r,tb,10,28),col,x,y,z,p);m.rotation.x=rx==null?Math.PI/2:rx;return m};
+ S(.3,oc,0,.78,0,g,.95,1,.78);T(.27,.045,sc2,0,.62,0,g);
+ const h=a.head=new THREE.Group();h.position.y=1.5;g.add(h);S(.4,sk,0,0,0,h,1,.95,.95);
+ const hm=mk(new THREE.SphereGeometry(.43,24,14,0,Math.PI*2,0,Math.PI*.56),hc,0,.01,-.03,h);hm.rotation.x=-.3;
+ if(st===0)for(let k=-3;k<=3;k++){const m=mk(new THREE.ConeGeometry(.14,.42,10),hc,k*.13,.4-.02*Math.abs(k),-.05,h);m.rotation.z=-k*.3;m.rotation.x=-.25}
+ if(st===1){S(.3,hc,0,-.2,-.3,h,1.1,1.5,.55);S(.1,hc,-.4,-.1,.05,h,.7,2,.8);S(.1,hc,.4,-.1,.05,h,.7,2,.8)}
+ if(st===2){S(.18,hc,0,.48,-.08,h);S(.08,hc,-.4,-.12,.1,h,.7,2.2,.8);S(.08,hc,.4,-.12,.1,h,.7,2.2,.8)}
+ if(st===3){const m=S(.12,hc,0,-.1,-.5,h,1,3,1);m.rotation.x=.5;S(.07,sc2,0,.12,-.44,h)}
+ if(st===4){S(.2,hc,-.36,-.06,0,h,.8,1.5,1.4);S(.2,hc,.36,-.06,0,h,.8,1.5,1.4);S(.3,hc,0,-.1,-.3,h,1.2,1.1,.6)}
+ if(st===5){const q1=S(.13,hc,-.46,-.25,-.05,h,1,2.6,1),q2=S(.13,hc,.46,-.25,-.05,h,1,2.6,1);q1.rotation.z=.3;q2.rotation.z=-.3;S(.06,sc2,-.42,0,-.05,h);S(.06,sc2,.42,0,-.05,h)}
+ T(.39,.045,sc2,0,.14,0,h);mk(rg(.3,.14,.05),0xcbd5e1,0,.14,.39,h,0,0,0,{metalness:.8,roughness:.25});mk(new THREE.OctahedronGeometry(.04),0x22d3ee,0,.14,.42,h);
+ [-.15,.15].forEach(x=>{S(.085,EY[a.i],x,-.02,.355,h,1,1.3,.45);S(.03,0x0b0b12,x,-.02,.385,h,1,1.3,.4);S(.022,0xffffff,x+.025,.03,.395,h,1,1,.5);mk(rg(.13,.025,.03),hc,x,.1,.37,h);S(.05,0xff9aa2,x*1.45,-.12,.31,h,1,.6,.3);if(ex===1)T(.09,.012,0x111827,x,-.02,.4,h,0)});
+ const mo=mk(new THREE.TorusGeometry(.055,.014,6,14,Math.PI),0x7f1d1d,0,-.14,.375,h);mo.rotation.z=Math.PI;
+ if(ex===3)T(.26,.075,sc2,0,1.02,0,g);
+ if(ex===4){const sr2=mk(new THREE.CylinderGeometry(.05,.05,.5,12),0xfde68a,0,.85,-.26,g);sr2.rotation.z=.6}
+ const lm=(x,y,w,l,col,hand)=>{const q=new THREE.Group();q.position.set(x,y,0);g.add(q);mk(new THREE.CylinderGeometry(w,w*.9,l,12),col,0,-l/2,0,q);S(w*1.2,col,0,0,0,q);if(hand)S(.095,sk,0,-l-.02,0,q);return q};
+ a.aL=lm(-.36,1,.075,.36,oc,1);a.aR=lm(.36,1,.075,.36,oc,1);a.lL=lm(-.14,.5,.095,.42,0x1f2937);a.lR=lm(.14,.5,.095,.42,0x1f2937);
+ S(.1,0x111827,0,-.45,.05,a.lL,1,.6,1.5);S(.1,0x111827,0,-.45,.05,a.lR,1,.6,1.5);
+ a.dot=new THREE.Mesh(new THREE.SphereGeometry(.09,10,8),new THREE.MeshBasicMaterial({color:DC.idle}));a.dot.position.y=2.65;g.add(a.dot);
+ const l=a.lb=label(a.n,'#e6f4ff',2.4,0);l.position.y=3.05;g.add(l);
+ g.position.set(RM[a.h].x+a.dx,0,RM[a.h].z-.6);g.rotation.y=Math.PI;sc.add(g);a.g=g}
+A.forEach(person);
+// ===== Phố, cây cối & dân cư =====
+const RDC=0x394150,SWC=0xb7ae9c;
+[-30,30].forEach(x=>{box(5,.08,69,RDC,x,.04,0);[-1,1].forEach(q=>box(1.4,.1,69,SWC,x+q*3.2,.05,0));for(let z=-32;z<=32;z+=4)box(.15,.02,1.6,0xf8fafc,x,.09,z)});
+[-30,30].forEach(z=>{box(65,.085,5,RDC,0,.045,z);[-1,1].forEach(q=>box(65,.1,1.4,SWC,0,.05,z+q*3.2));for(let x=-32;x<=32;x+=4)box(1.6,.02,.15,0xf8fafc,x,.095,z)});
+function tree(x,z,k){const c=[0x2f7d3a,0x3b9a47,0x4fb05a][(Math.abs(x*7+z*3)|0)%3];cy(.15*k,.22*k,1.8*k,0x6b4423,x,.9*k,z);sp(1.0*k,c,x,2.4*k,z);sp(.75*k,c,x+.3*k,3.1*k,z+.2*k)}
+function bush(x,z){sp(.5,0x3f9a4a,x,.35,z);sp(.09,0xf472b6,x+.3,.6,z+.2);sp(.09,0xfde047,x-.3,.5,z+.3)}
+function lamp(x,z){cy(.06,.08,3,0x374151,x,1.5,z);sp(.25,0xfef08a,x,3.1,z,{emissive:0xffd166,emissiveIntensity:1})}
+function bench(x,z){box(1.8,.12,.5,0x8b5a2b,x,.45,z);box(.1,.45,.4,0x4a2f1a,x-.7,.22,z);box(.1,.45,.4,0x4a2f1a,x+.7,.22,z)}
+for(let k=-24;k<=24;k+=6)[-25.2,25.2].forEach(x=>tree(x,k,1));
+for(let k=-18;k<=18;k+=6)[-25.2,25.2].forEach(z=>tree(k,z,1));
+[-24,-12,0,12,24].forEach(k=>{[-27.6,27.6].forEach(v=>{lamp(v,k);lamp(k,v)})});
+[-34,34].forEach(x=>[-30,-24,-6,0,6,24,30].forEach(z=>bush(x,z)));
+[[-12,26.8],[12,26.8],[-12,-26.8],[12,-26.8]].forEach(q=>bench(q[0],q[1]));
+function npc(x,z,o){o=o||{};const n=Object.assign({t:NP.length*1.7,x0:x,z0:z},o),g=new THREE.Group(),i=NP.length,sk=[0xffdcb8,0xf5c29a,0xd9a073][i%3],c=[0xef4444,0x3b82f6,0x22c55e,0xf59e0b,0xa855f7,0xec4899,0x14b8a6,0xfb923c][(i*3+1)%8],hc=[0x1f2937,0x78350f,0xfacc15,0x111827,0x9a3412][i%5];
+ const mk=(geo,col,px,py,pz,par,ol)=>{const m=new THREE.Mesh(geo,M(col));m.position.set(px,py,pz);m.castShadow=true;if(ol){const q=new THREE.Mesh(geo,OLM);q.scale.setScalar(1.06);m.add(q)}(par||g).add(m);return m};
+ mk(new THREE.SphereGeometry(.3,14,10),c,0,.78,0,g,1).scale.set(.95,1,.78);
+ const h=n.h=new THREE.Group();h.position.y=1.38;g.add(h);mk(new THREE.SphereGeometry(.34,16,12),sk,0,0,0,h,1);mk(new THREE.SphereGeometry(.36,16,10,0,6.28,0,1.7),hc,0,.03,-.03,h).rotation.x=-.3;
+ [-.12,.12].forEach(e=>mk(new THREE.SphereGeometry(.05,8,6),0x111111,e,-.02,.31,h));
+ const lm=(px,py,r,l,col)=>{const q=new THREE.Group();q.position.set(px,py,0);g.add(q);mk(new THREE.CylinderGeometry(r,r*.9,l,10),col,0,-l/2,0,q);return q};
+ n.aL=lm(-.32,1.02,.07,.4,c);n.aR=lm(.32,1.02,.07,.4,c);n.lL=lm(-.12,.5,.09,.42,0x374151);n.lR=lm(.12,.5,.09,.42,0x374151);
+ if(o.paddle)mk(new THREE.CylinderGeometry(.2,.2,.04,14),0xf97316,0,-.5,.12,n.aR).rotation.x=Math.PI/2;
+ if(o.sit)n.lL.rotation.x=n.lR.rotation.x=-1.5;
+ g.position.set(x,0,z);g.rotation.y=o.face||0;n.g=g;sc.add(g);NP.push(n);return n}
+function car(c,path,v,k){const g=new THREE.Group();box(1.1,.55,2.3,c,0,.55,0,g);box(1,.5,1.1,0xdbeafe,0,1.05,-.1,g);[[-.6,.7],[.6,.7],[-.6,-.7],[.6,-.7]].forEach(q=>{const w=cy(.26,.26,.2,0x111827,0,0,0);sc.remove(w);w.rotation.z=Math.PI/2;w.position.set(q[0],.26,q[1]);g.add(w)});
+ g.position.set(path[k][0],0,path[k][1]);sc.add(g);const d=new THREE.Object3D();NP.push({g,path,sp:v,i:(k+1)%path.length,car:1,h:d,aL:d,aR:d,lL:d,lR:d,t:0})}
+const BL=sp(.13,0xfde047,0,1,38);
+function npcTick(dt,t){CL.forEach(c=>{c.position.x+=dt*.7;if(c.position.x>95)c.position.x=-95});
+ BL.position.set(Math.sin(t*.9)*4.8,.8+Math.abs(Math.sin(t*1.8))*.9,38+Math.sin(t*.5));
+ NP.forEach(n=>{const g=n.g;
+  if(n.path){const T=n.path[n.i],dx=T[0]-g.position.x,dz=T[1]-g.position.z,L=Math.hypot(dx,dz);if(L<.3)n.i=(n.i+1)%n.path.length;else{g.position.x+=dx/L*n.sp*dt;g.position.z+=dz/L*n.sp*dt;g.rotation.y=Math.atan2(dx,dz)}
+   if(!n.car){const s=Math.sin(t*8+n.t)*.6;n.lL.rotation.x=s;n.lR.rotation.x=-s;n.aL.rotation.x=-s*.8;n.aR.rotation.x=s*.8;g.position.y=Math.abs(s)*.04}}
+  else if(n.play){const s=Math.sin(t*2.2+n.t);g.position.x=n.x0+Math.sin(t*1.1+n.t)*n.rx;g.position.z=n.z0+Math.sin(t*1.7+n.t)*n.rz;n.aR.rotation.x=-1.4+s*.9;n.aL.rotation.x=.3;n.lL.rotation.x=Math.sin(t*6+n.t)*.4;n.lR.rotation.x=-Math.sin(t*6+n.t)*.4}
+  else if(n.sit){n.h.rotation.y=Math.sin(t*.6+n.t)*.5;n.aR.rotation.x=-.9+(n.drink?Math.sin(t*1.2+n.t)*.5-.3:0);n.aL.rotation.x=-.7}
+  else{n.h.rotation.y=Math.sin(t*.7+n.t)*.4;n.aR.rotation.x=Math.sin(t*1.3+n.t)*.15;n.aL.rotation.x=-Math.sin(t*1.1+n.t)*.15}})}
+const L1=[[-29,-29],[29,-29],[29,29],[-29,29]],L2=[[-31,31],[31,31],[31,-31],[-31,-31]];
+car(0xef4444,L1,7,0);car(0x3b82f6,L1,6,2);car(0xfacc15,L2,8,1);car(0x22c55e,L2,6.5,3);
+const W1=[[-26.8,-26.8],[26.8,-26.8],[26.8,26.8],[-26.8,26.8]],W2=[[-33.2,33.2],[33.2,33.2],[33.2,-33.2],[-33.2,-33.2]];
+for(let k=0;k<4;k++){npc(W1[k][0],W1[k][1],{path:W1,i:(k+1)%4,sp:1.5+k*.1});npc(W2[k][0],W2[k][1],{path:W2,i:(k+1)%4,sp:1.4+k*.1})}
+const sit2=(x,z,f)=>{npc(x-1.15,z,{sit:1,face:Math.PI/2,drink:1});npc(x+1.15,z,{sit:1,face:-Math.PI/2})};
+sit2(-42.5,-13.5);sit2(-38,-13);sit2(-42.5,14.5);sit2(-38,15);sit2(37.4,14);sit2(40,15);sit2(42.6,14);
+npc(-41,-15.9,{face:Math.PI});npc(-39,-15.9,{face:Math.PI});npc(-40,-17.3,{face:0});
+npc(-41,12.1,{face:Math.PI});npc(-39,12.1,{face:Math.PI});npc(-40,10.8,{face:0});
+[-2,0,2].forEach(k=>{npc(40+k,-12.55,{sit:1,face:Math.PI,drink:1});npc(40+k,-15.45,{sit:1,face:0})});
+npc(34.8,-17.5,{face:Math.PI/2});npc(45,10.5,{face:-Math.PI/2});
+[[-4.5,36.5,Math.PI/2],[-4.5,39.5,Math.PI/2],[4.5,36.5,-Math.PI/2],[4.5,39.5,-Math.PI/2]].forEach(q=>npc(q[0],q[1],{play:1,paddle:1,rx:1.4,rz:.9,face:q[2]}));
+box(8,.12,.6,0x8b5a2b,0,.45,44.6);[-2,0,2].forEach(k=>npc(k,44.6,{sit:1,face:Math.PI}));
+
+const sr=new THREE.Mesh(new THREE.RingGeometry(.45,.55,32),new THREE.MeshBasicMaterial({color:0x22d3ee,side:2}));sr.rotation.x=-Math.PI/2;sr.position.y=.1;sr.visible=false;sc.add(sr);
+function setMode(a,m){a.mode=m;a.dot.material.color.set(DC[m])}
+function go(a,ri,lx,lz,face,m,cb){const f=RM[a.room],t=RM[ri],q=[];
+ if(a.room!==ri)q.push([f.x-4.3,f.z],[f.x-5,f.z],[f.x-5,f.z+5],[t.x-5,f.z+5],[t.x-5,t.z],[t.x-4.3,t.z]);
+ q.push([t.x+lx,t.z+lz]);a.q=q.map(p=>new THREE.Vector3(p[0],0,p[1]));a.room=ri;a.seat=false;
+ a.fin=()=>{a.g.rotation.y=face;setMode(a,m);cb&&cb()};a.tgt=a.q.shift();setMode(a,'walk')}
+const back=a=>new Promise(r=>go(a,a.h,a.dx,-.6,Math.PI,'idle',()=>{a.seat=true;r()}));
+function hist(a,t){a.hist.push(t)}
+function log(a,t){const w=a?a.n.split(' ').slice(-1)[0]:'Hệ thống';if(a)hist(a,t);if(CUR&&CUR.run)CUR.log.push({t:Date.now(),w,m:t});$('#lg').insertAdjacentHTML('afterbegin','<div><small>'+new Date().toLocaleTimeString('vi-VN')+'</small> <b>'+w+'</b> '+esc(t)+'</div>');const l=$('#lg');while(l.children.length>80)l.lastChild.remove()}
+function job(a,task,ms){task='[TRÌNH DIỄN] '+task;return new Promise(r=>{a.task=task;a.prog=0;a.job={ms,e:0,r};setMode(a,'work');hist(a,task)})}
+function say(a,t){t='[TRÌNH DIỄN] '+t;a.task=t;a.prog=0;log(a,t)}
+// ===== Hoạt ảnh =====
+function tick(dt,t){A.forEach(a=>{const g=a.g;
+ if(a.tgt){const d=a.tgt.clone().sub(g.position);d.y=0;const L=d.length();
+  if(L<.06){g.position.x=a.tgt.x;g.position.z=a.tgt.z;a.tgt=a.q.shift()||null;if(!a.tgt)a.fin()}
+  else{d.normalize();g.position.addScaledVector(d,Math.min(L,3*dt));g.rotation.y=Math.atan2(d.x,d.z)}}
+ if(a.job){a.job.e+=dt*1000;a.prog=Math.min(100,a.job.e/a.job.ms*100);if(a.prog>=100){const r=a.job.r;a.job=null;setMode(a,'done');r()}}
+ const w=!!a.tgt,s=Math.sin(t*9+a.i);
+ g.position.y=w?Math.abs(s)*.05:(a.seat?-.03:0);
+ if(w){a.lL.rotation.x=s*.6;a.lR.rotation.x=-s*.6;a.aL.rotation.x=-s*.5;a.aR.rotation.x=s*.5}
+ else if(a.seat){const k=a.mode==='work';a.lL.rotation.x=a.lR.rotation.x=-1.5;a.aL.rotation.x=-1.2+(k?Math.sin(t*17+a.i)*.12:0);a.aR.rotation.x=-1.2+(k?Math.cos(t*15+a.i)*.12:0);a.head.rotation.y=k?0:Math.sin(t*.8+a.i)*.4}
+ else{const p=a.mode==='present';a.lL.rotation.x=a.lR.rotation.x=0;a.aL.rotation.x=Math.sin(t*1.5+a.i)*.08;a.aR.rotation.x=p?-2.3+Math.sin(t*3)*.2:Math.sin(t*1.7+a.i)*.15-(a.mode==='meet'?.4:0);a.head.rotation.y=Math.sin(t*.9+a.i)*.3}
+ a.dot.position.y=2.65+Math.sin(t*3+a.i)*.03})}
+let sel=null,foc=null,auto=false,la=0;const clk=new THREE.Clock();
+(function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1);tick(dt,clk.elapsedTime);npcTick(dt,clk.elapsedTime);
+ if(auto&&!foc&&clk.elapsedTime-la>6){const b=A.filter(a=>a.mode!=='idle'&&a.mode!=='done'&&a.mode!=='fin');if(b.length){select(b[0|Math.random()*b.length].i,true);la=clk.elapsedTime}}
+ if(foc){const p=foc.f?foc.f.g.position:foc.p;oc.target.lerp(p,.1);cam.position.lerp(p.clone().add(new THREE.Vector3(7,8,10)),.04);if(--foc.n<=0)foc=null}
+ if(sel!=null){sr.visible=true;sr.position.x=A[sel].g.position.x;sr.position.z=A[sel].g.position.z}
+ oc.update();ren.render(sc,cam)})();
+// ===== Chọn nhân viên =====
+const ray=new THREE.Raycaster(),mv=new THREE.Vector2();let dn;
+R.addEventListener('pointerdown',e=>dn=[e.clientX,e.clientY]);
+R.addEventListener('pointerup',e=>{if(!dn||Math.hypot(e.clientX-dn[0],e.clientY-dn[1])>5)return;const b=R.getBoundingClientRect();
+ mv.set((e.clientX-b.left)/b.width*2-1,-((e.clientY-b.top)/b.height)*2+1);ray.setFromCamera(mv,cam);const h=ray.intersectObjects(pick)[0];if(h)return select(h.object.userData.i,true);const q=ray.intersectObjects(rk)[0];if(q){const i=q.object.userData.r,r=RM[i];sel=null;sr.visible=false;foc={p:new THREE.Vector3(r.x,0,r.z),n:100};$('#sel').innerHTML='<b>'+r[0]+'</b><br><small>Nhân sự: '+(A.filter(a=>a.h===i).map(a=>a.n).join(', ')||'chưa có')+'</small>'}});
+function select(i,f){sel=i;$('#sel').innerHTML='<div id="si"></div><div class="row" style="margin:4px 0"><input id="rn" placeholder="Đổi tên nhân viên…"><button id="rb">Đổi</button></div><input id="ti" placeholder="Giao việc trực tiếp cho nhân viên này…"><button id="tb" class="pr" style="margin-top:6px;width:100%">Giao việc</button>';
+ $('#tb').onclick=()=>{const a=A[sel],v=$('#ti').value.trim();if(!v)return;
+  
+  $('#ti').value='';a.tq.push(v);log(a,'Đã ghi nhận việc từ Giám đốc: '+v+' — ĐANG CHỜ API (chưa có Agent thực thi)');saveP()};
+ if(f)foc={f:A[i],n:100};if(innerWidth<700)$('#p').classList.remove('min');ui()}
+$('#ls').addEventListener('pointerdown',e=>{const r=e.target.closest('.sf');if(r)select(+r.dataset.i,true)});
+function ui(){$('#ls').innerHTML=A.map((a,i)=>'<div class="sf'+(i===sel?' s':'')+'" data-i="'+i+'"><span class="dt" style="background:#'+DC[a.mode].toString(16).padStart(6,'0')+'"></span><span>'+a.n+' <small>· '+a.t+'</small></span><small>'+ST[a.mode]+(a.job?' '+Math.round(a.prog)+'%':'')+'</small></div>').join('');
+ if(sel!=null&&$('#si')){const a=A[sel];$('#si').innerHTML='<b>'+a.n+'</b><br>'+a.t+'<br><small>Chuyên môn: '+a.sp+'</small><br>Trạng thái: '+ST[a.mode]+'<br>Nhiệm vụ: '+(esc(a.task)||'—')+'<br>Việc chờ API: '+(a.tq.length?esc(a.tq.join(' | ')):'—')+'<div class="bar"><i style="width:'+a.prog+'%"></i></div><small>Lịch sử:<br>'+(a.hist.slice(-4).reverse().map(esc).join('<br>')||'—')+'</small>'}}
+setInterval(()=>{ui();updIg();prg()},250);
+// ===== Quy trình =====
+const S=['Tiếp nhận','Họp','Triển khai','Kiểm duyệt','Bàn giao'],sl=ms=>new Promise(r=>setTimeout(r,ms));
+function stage(n){$('#st').innerHTML=S.map((s,i)=>'<span class="ch'+(i<n?' dn':i===n?' on':'')+'">'+(i<n?'✓ ':'')+(i+1)+' '+s+'</span>').join('')}
+stage(-1);let busy=false,SP=null,CUR=null,FILES=[],t0=0,DBC=null;
+const NM=(()=>{try{return JSON.parse(localStorage.getItem('jk4')||'{}')}catch(e){return{}}})();
+function renameA(i,n){const a=A[i];a.n=n;a.g.remove(a.lb);a.lb=label(n,'#e6f4ff',2.4,0);a.lb.position.y=3.05;a.g.add(a.lb);NM[i]=n;try{localStorage.setItem('jk4',JSON.stringify(NM))}catch(e){}}
+A.forEach((a,i)=>{if(NM[i])renameA(i,NM[i])});
+$('#sel').addEventListener('click',e=>{if(e.target.id==='rb'&&sel!=null){const v=$('#rn').value.trim();if(v){renameA(sel,v);$('#rn').value=''}}});
+const MSL=[[-2.1,0],[2.1,0],[-2.1,2],[2.1,2],[0,3.4],[-3.4,1],[3.4,1],[-3.4,3],[3.4,3],[0,-.2]];
+const KEY={chien_luoc:[2,'Chiến lược Marketing'],concept:[1,'Concept sáng tạo'],noi_dung:[3,'Nội dung'],seo:[6,'SEO (đề xuất)'],ads:[7,'Ads (đề xuất)'],lich_dang:[3,'Lịch đăng bài'],thiet_ke:[4,'Brief thiết kế (CHƯA phải ảnh)'],video:[5,'Brief video (CHƯA phải video)'],bao_gia:[8,'Báo giá (đề xuất)']};
+const RL={8:'nhân viên kinh doanh & chăm sóc khách hàng',0:'CEO',1:'Giám đốc sáng tạo',2:'Trưởng phòng Marketing',3:'Chuyên viên Content',4:'Chuyên viên thiết kế đồ họa',5:'Chuyên viên Video/Editor',6:'Chuyên viên SEO',7:'Chuyên viên Ads'};
+const fmt=ms=>{const q=Math.round(ms/1000);return Math.floor(q/60)+' phút '+q%60+' giây'},dts=p=>p.id>1e12?new Date(p.id).toLocaleString('vi-VN'):'bản cũ',tx=v=>Array.isArray(v)?JSON.stringify(v):String(v==null?'':v);
+function ck(){$('#ck').textContent=new Date().toLocaleString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})}setInterval(ck,1000);
+function prg(){const r=CUR&&CUR.run;$('#pbi').style.width=(r?Math.min(100,Math.round(CUR.dn/CUR.tot*100)):(CUR&&(CUR.st||'').indexOf('ĐÃ BÀN GIAO')===0?100:0))+'%';$('#pt').textContent=r?'Đang chạy: '+Math.min(CUR.dn,CUR.tot)+'/'+CUR.tot+' bước · '+fmt(Date.now()-t0):(CUR?CUR.st:'Chưa có dự án đang chạy')}
+// ---- tệp đính kèm
+$('#at').onclick=()=>$('#fl').click();
+$('#fl').addEventListener('change',async e=>{const fs=[...e.target.files];e.target.value='';
+ for(const f of fs){if(FILES.length>=5){log(null,'Chỉ nhận tối đa 5 tệp, bỏ qua: '+f.name);continue}
+  const o={n:f.name,ok:false};
+  if(/\.(txt|md|csv|json|html?|srt|log)$/i.test(f.name)||f.type.startsWith('text/')){try{o.txt=(await f.text()).slice(0,12000);o.ok=true}catch(x){}}
+  else if(f.type.startsWith('image/')&&f.size<5e6){o.blob=f;o.ok=true}
+  FILES.push(o)}
+ renderFiles()});
+function renderFiles(){$('#fli').innerHTML=FILES.map((f,i)=>'<div class="sf" style="grid-template-columns:1fr auto"><span>'+esc(f.n)+'</span><small>'+(f.ok?'Đã đọc':'Chưa đọc được định dạng này')+' <a data-x="'+i+'" style="cursor:pointer">✕</a></small></div>').join('')+(FILES.length?'<small>'+FILES.length+'/5 tệp</small>':'')}
+$('#fli').addEventListener('pointerdown',e=>{const x=e.target.dataset.x;if(x!==undefined){FILES.splice(+x,1);renderFiles()}});
+// ---- lịch sử
+function renderHist(){const q=($('#hs').value||'').toLowerCase(),L=PJ.slice().sort((a,b)=>(b.upd||b.id)-(a.upd||a.id)).filter(p=>((p.v||'')+' '+dts(p)+' '+(p.st||'')).toLowerCase().includes(q));
+ $('#hl').innerHTML=L.map(p=>'<div class="sf" style="grid-template-columns:1fr auto" data-id="'+p.id+'"><span>'+esc((p.v||'').slice(0,50))+'<br><small>'+dts(p)+' · <a data-lg="'+p.id+'" style="cursor:pointer">xem quá trình</a></small></span><small class="tg">'+esc(p.st||'—')+'</small></div>').join('')||'<small>Chưa có dự án nào.</small>'}
+$('#hl').addEventListener('pointerdown',e=>{const lg=e.target.dataset.lg,r=e.target.closest('[data-id]');if(!r)return;const p=PJ.find(x=>String(x.id)===(lg||r.dataset.id));if(!p)return;
+ if(lg)$('#hv').innerHTML='<h4>Quá trình dự án</h4>'+((p.log&&p.log.length)?p.log.map(x=>'<div><small>'+new Date(x.t).toLocaleTimeString('vi-VN')+'</small> <b>'+esc(x.w)+'</b> '+esc(x.m)+'</div>').join(''):'<small>Không có nhật ký.</small>');
+ else{showCur(p);tab('kq')}});
+$('#hs').addEventListener('input',renderHist);
+$('#nw').onclick=()=>{if(busy)return log(null,'Đang xử lý, vui lòng chờ xong rồi tạo dự án mới.');CUR=null;FILES=[];renderFiles();$('#rq').value='';showCur();tab('vc');stage(-1);prg();log(null,'Dự án mới: hãy nhập việc cần công ty thực hiện hoặc đính kèm tài liệu.')};
+(async()=>{try{if(!window.claude)throw 0;const u=await claude.use('user'),db=await claude.use('db'),id=u&&await u.id();if(!db||!id)throw 0;DBC=db.collection('data/users/'+id);
+ const sn=await DBC.get();let ch=0;sn.docs.forEach(d=>{const x=d.data();if(!x||!x.id)return;const o=PJ.find(p=>p.id===x.id);if(!o){PJ.push(Object.assign({out:{},log:[]},x));ch=1}else if((x.upd||0)>(o.upd||0)){Object.assign(o,x);ch=1}});
+ if(ch){saveP();renderHist()}PJ.forEach(p=>{if(p.id>1e12){try{DBC.doc('p'+p.id).set(JSON.parse(JSON.stringify(p))).catch(()=>{})}catch(e){}}});$('#hm').textContent='Đã lưu theo tài khoản của bạn (và trong trình duyệt): đăng nhập lại vẫn thấy.'}catch(e){$('#hm').textContent='Chỉ lưu trong trình duyệt này (chưa lưu theo tài khoản).'}})();
+// ---- AI thật
+let ACT=0;
+async function AI(fn){for(let k=0;k<3;k++){while(ACT>=2)await sl(500);ACT++;try{return await Promise.race([fn(),new Promise((_,rj)=>setTimeout(()=>rj({code:'timeout',message:'quá thời gian chờ'}),150000))])}catch(e){if(e&&e.code==='not_granted')throw e;if(k===2)throw e;await sl(4000*(k+1))}finally{ACT--}}}
+const er=e=>((e&&e.code)?e.code+': ':'')+((e&&e.message)||e||'lỗi'),S1=(p,o)=>AI(()=>SP(p,o)),SJ=(p,o)=>AI(()=>SP.json(p,o));
+async function intake(fl){const a=A[8],tx2=fl.filter(f=>f.txt).map(f=>'### '+f.n+'\n'+f.txt).join('\n\n'),im=fl.filter(f=>f.blob).map(f=>f.blob),bad=fl.filter(f=>!f.ok).map(f=>f.n);
+ a.task='Đọc yêu cầu & tài liệu';a.prog=0;setMode(a,'work');hist(a,'Đang xử lý (AI thật): '+a.task);
+ const o={cache:false};if(im.length){try{if((await SP.limits()).images)o.images=im;else bad.push('ảnh (chưa gửi được)')}catch(e){bad.push('ảnh (chưa gửi được)')}}
+ const r=await S1('Bạn là nhân viên kinh doanh & chăm sóc khách hàng của công ty truyền thông JK MEDIA. Đọc kỹ yêu cầu khách hàng và tài liệu kèm theo (nếu khách không viết yêu cầu bằng chữ thì suy ra yêu cầu từ tài liệu), rồi tóm tắt: yêu cầu thật sự của khách, mục tiêu, đối tượng, thông tin quan trọng lấy đúng từ tài liệu (không bịa), thông tin còn thiếu. Tối đa 250 từ.\n\n'+(CUR.prevNote?'BỐI CẢNH DỰ ÁN TRƯỚC:\n'+CUR.prevNote+'\n\n':'')+'YÊU CẦU:\n'+CUR.v+'\n\nTÀI LIỆU VĂN BẢN:\n'+(tx2||'(không có)')+(im.length?'\n\n('+im.length+' ảnh đính kèm)':'')+(bad.length?'\n\n(Chưa đọc được: '+bad.join(', ')+')':''),o);
+ setMode(a,'fin');a.prog=100;log(a,'Đã đọc yêu cầu'+(fl.length?' và '+fl.length+' tài liệu':'')+(bad.length?'; chưa đọc được: '+bad.join(', '):''));return r.text+(bad.length?'\n(Tệp chưa đọc được: '+bad.join(', ')+')':'')}
+async function planIt(){const a=A[0];a.task='Phân tích yêu cầu & lập kế hoạch';a.prog=0;setMode(a,'work');hist(a,'Đang xử lý (AI thật): '+a.task);
+ const j=await SJ('Bạn là CEO công ty truyền thông JK MEDIA. Đọc yêu cầu khách hàng rồi QUYẾT ĐỊNH CHÍNH XÁC cần làm gì, không làm thừa. Ví dụ: khách chỉ cần kịch bản thì chỉ chọn noi_dung, KHÔNG chọn thiet_ke hay video. Các mục có thể chọn: chien_luoc (chiến lược marketing), concept (ý tưởng sáng tạo), noi_dung (bài viết, kịch bản, nội dung quảng cáo), seo, ads (kế hoạch quảng cáo), lich_dang (lịch đăng bài), thiet_ke (khách cần hình ảnh/poster/banner), video (khách cần video), bao_gia (khách cần báo giá). Nếu yêu cầu quá mơ hồ để làm, để can_lam rỗng và đặt câu hỏi vào can_hoi. Chỉ trả JSON thuần: {"can_lam":["..."],"giao_viec":{"<muc>":"chỉ dẫn cụ thể cho bộ phận"},"ly_do":"...","can_hoi":""}\n\nYÊU CẦU:\n'+CUR.v+'\n\nTÓM TẮT:\n'+CUR.fsum,{cache:false});
+ j.can_lam=(Array.isArray(j.can_lam)?j.can_lam:[]).filter(k=>KEY[k]);j.giao_viec=j.giao_viec||{};j.ly_do=j.ly_do||'';setMode(a,'fin');a.prog=100;return j}
+async function ask(key,ctx,extra){const [i,lb]=KEY[key],a=A[i],mt=a.mode==='present'||a.mode==='meet',as=(CUR.plan&&CUR.plan.giao_viec[key])||'';
+ const fm={thiet_ke:'Viết BRIEF thiết kế bằng văn bản (bố cục, màu sắc, chữ, thông tin cần có). Đây KHÔNG phải hình ảnh. Tối đa 250 từ.',video:'Viết kịch bản phân cảnh bằng văn bản. Đây KHÔNG phải video. Tối đa 300 từ.',lich_dang:'Chỉ trả về JSON thuần là mảng [{"ngay":"YYYY-MM-DD","gio":"HH:MM","kenh":"...","noi_dung":"..."}], ngày từ hôm nay trở đi.'}[key]||'Trình bày gọn, đầy đủ phần được giao.';
+ const p='Bạn là '+RL[i]+' của công ty truyền thông JK MEDIA. Hôm nay là '+new Date().toLocaleDateString('vi-VN')+'. Quy tắc: viết bằng '+LN()+'; không bịa hotline, địa chỉ, giá, số liệu; thiếu thông tin thì ghi [CẦN BỔ SUNG: …]; chỉ làm ĐÚNG phần được giao, không làm thừa.\n\nYÊU CẦU KHÁCH HÀNG:\n'+CUR.v+'\n\nTÀI LIỆU & TÓM TẮT:\n'+(CUR.fsum||'')+'\n\nBỐI CẢNH:\n'+(ctx||'(chưa có)')+'\n\nNHIỆM VỤ ĐƯỢC GIAO ('+lb+'): '+as+(extra?'\n\nPHẢN HỒI CẦN XỬ LÝ:\n'+extra:'')+'\n\n'+fm;
+ a.task=lb;a.prog=0;if(!mt)setMode(a,'work');hist(a,'Đang xử lý (AI thật): '+lb);log(a,'Bắt đầu: '+lb);
+ try{let r;if(key==='lich_dang'){r=await SJ(p,{cache:false});r=Array.isArray(r)?r:(r&&Object.values(r).find(Array.isArray))||[]}else r=(await S1(p,{cache:false})).text;
+  CUR.out[key]=r;if(!mt)setMode(a,'fin');a.prog=100;CUR.dn++;log(a,'Hoàn thành: '+lb);saveP();return r}
+ catch(e){if(!mt)setMode(a,'idle');CUR.fail=(CUR.fail||[]).concat(lb);log(a,'THẤT BẠI: '+lb+' ('+er(e)+')');CUR.dn++;saveP();return null}}
+async function qcRun(){const a=A[9],ks=Object.keys(CUR.out);a.task='Kiểm tra sản phẩm theo yêu cầu';a.prog=0;setMode(a,'work');hist(a,'Đang xử lý (AI thật): '+a.task);log(a,'Bắt đầu kiểm tra '+ks.length+' sản phẩm');
+ const j=await SJ('Bạn là Trưởng phòng QC độc lập, nghiêm khắc. Kiểm tra sản phẩm: (1) đúng và đủ so với yêu cầu khách, (2) không làm thừa việc khách không yêu cầu, (3) không bịa số liệu/hotline/địa chỉ, (4) nhất quán thông điệp. thiet_ke và video chỉ là bản mô tả bằng chữ, đừng trừ lỗi vì thiếu file ảnh/video. Chỉ trả JSON thuần: {"dat":true hoặc false,"loi":[{"muc":"'+ks.join('|')+'","van_de":"..."}],"nhan_xet":"..."}\n\nYÊU CẦU:\n'+CUR.v+'\n\nTÀI LIỆU:\n'+CUR.fsum+'\n\nSẢN PHẨM:\n'+ks.map(k=>'## '+KEY[k][1]+'\n'+tx(CUR.out[k])).join('\n\n'),{cache:false});
+ CUR.qcn=j.nhan_xet||'';setMode(a,j.dat?'fin':'idle');log(a,(j.dat?'ĐẠT: ':'KHÔNG ĐẠT: ')+CUR.qcn);return j}
+async function review(ctx){let ok=false;if(!Object.keys(CUR.out).length){CUR.qc='';return}
+ for(let k=0;k<2&&!ok;k++){stage(3);let j;try{j=await qcRun()}catch(e){setMode(A[9],'idle');log(A[9],'QC gặp lỗi ('+er(e)+'), bỏ qua bước kiểm duyệt');CUR.qc='QC: chưa chạy được do lỗi AI.';CUR.dn++;return}ok=!!j.dat;if(ok||k)break;
+  log(A[9],'Không đạt, trả về bộ phận phụ trách để sửa');
+  await Promise.all((j.loi||[]).filter(l=>KEY[l.muc]&&CUR.out[l.muc]!==undefined).map(l=>ask(l.muc,ctx,'Bản trước:\n'+tx(CUR.out[l.muc])+'\nQC chỉ ra: '+l.van_de)))}
+ CUR.dn++;CUR.qc=ok?'QC: ĐẠT. '+CUR.qcn:'QC: CHƯA ĐẠT sau 2 lần kiểm tra. '+CUR.qcn}
+function fin(ok){CUR.run=false;busy=false;saveP();renderHist();showCur();stage(ok?5:-1);prg();if(ok)tab('kq')}
+async function rrun(prev){
+ if(busy)return log(null,'Đang xử lý, vui lòng chờ.');
+ let v=$('#rq').value.trim();if(!v&&!FILES.length)return log(null,'Hãy nhập việc cần thực hiện hoặc đính kèm tài liệu.');
+ if(!v)v='(Khách không viết yêu cầu bằng chữ: hãy xác định yêu cầu từ tài liệu đính kèm)';
+ if(!window.claude)return log(null,'Trang này chưa được cấp quyền dùng AI.');
+ if(IG.text!=='Claude')return log(null,'Đang chọn '+IG.text+' cho văn bản nhưng chưa kết nối được (cần máy chủ trung gian). Hãy chọn lại Claude để chạy.');
+ SP=await claude.use('sample');if(!SP)return log(null,'Chưa dùng được AI: bạn cần đồng ý cấp quyền khi được hỏi.');
+ const pv=prev&&prev.out?'Yêu cầu trước: '+prev.v+'\nKết quả trước: '+Object.keys(prev.out).filter(k=>KEY[k]).map(k=>KEY[k][1]+': '+tx(prev.out[k]).slice(0,1500)).join(' | '):'';
+ busy=true;CUR={id:Date.now(),v,files:FILES.map(f=>({n:f.n,ok:f.ok,txt:(f.txt||'').slice(0,4000)})),st:'ĐANG XỬ LÝ',plan:null,out:{},log:[],run:true,dn:0,tot:2,upd:Date.now(),prevNote:pv};
+ PJ.unshift(CUR);t0=Date.now();saveP();renderHist();showCur();tab('vc');$('#rq').value='';const fl=FILES.slice();FILES=[];renderFiles();
+ const [CEO,CD,MK,CT,DS,VD,SE,AD,SL,QC]=A;
+ try{
+  stage(0);log(SL,'Đọc yêu cầu và tài liệu khách gửi');try{CUR.fsum=await intake(fl)}catch(e){CUR.fsum='(Chưa tóm tắt được tài liệu) '+CUR.v;log(SL,'Lỗi khi đọc tài liệu ('+er(e)+'), tạm dùng nguyên văn yêu cầu');setMode(SL,'idle')}CUR.dn++;saveP();
+  log(CEO,'Phân tích yêu cầu để quyết định cần làm gì');let j;try{j=await planIt()}catch(e){log(CEO,'Lỗi khi lập kế hoạch ('+er(e)+'), làm phần nội dung theo yêu cầu gốc');setMode(CEO,'idle');j={can_lam:['noi_dung'],giao_viec:{noi_dung:CUR.v},ly_do:'Không phân tích tự động được; làm phần nội dung theo yêu cầu.',can_hoi:''}}CUR.plan=j;CUR.dn++;
+  if(!j.can_lam.length){log(CEO,'Cần hỏi thêm khách: '+(j.can_hoi||'yêu cầu chưa rõ'));CUR.st='CẦN BỔ SUNG';return fin(1)}
+  CUR.tot=2+j.can_lam.length+2;log(CEO,'Quyết định làm: '+j.can_lam.map(k=>KEY[k][1]).join(', ')+'. Lý do: '+j.ly_do);
+  const gp={};j.can_lam.forEach(k=>(gp[KEY[k][0]]=gp[KEY[k][0]]||[]).push(k));const ids=Object.keys(gp).map(Number);
+  j.can_lam.forEach(k=>log(CEO,'Giao cho '+A[KEY[k][0]].n+' ('+A[KEY[k][0]].t+'): '+(j.giao_viec[k]||KEY[k][1])));
+  if(ids.length>1){stage(1);log(CEO,'Họp giao việc tại phòng họp');const par=[...new Set([8,...ids])].filter(i=>i!==0);
+   await Promise.all(par.map((i,k)=>new Promise(r=>go(A[i],10,MSL[k][0],MSL[k][1],Math.PI,'meet',r))).concat(new Promise(r=>go(CEO,10,0,-2.4,0,'present',r))));
+   await sl(2500);await Promise.all(par.concat(0).map(i=>back(A[i])))}
+  stage(2);const c0=CUR.fsum+'\n'+JSON.stringify(j.giao_viec),ka=j.can_lam.filter(k=>k==='concept'||k==='chien_luoc'),kb=j.can_lam.filter(k=>!ka.includes(k));
+  await Promise.all(ka.map(k=>ask(k,c0)));const c1=c0+ka.map(k=>'\n['+KEY[k][1]+']\n'+(CUR.out[k]||'')).join('');
+  const g2={};kb.forEach(k=>(g2[KEY[k][0]]=g2[KEY[k][0]]||[]).push(k));
+  await Promise.all(Object.values(g2).map(async ks=>{for(const k of ks)await ask(k,c1)}));
+  await review(c1);
+  stage(4);log(SL,'Tổng hợp bàn giao cho khách');setMode(SL,'fin');SL.task='Tổng hợp bàn giao';
+  const nt=['thiet_ke','video'].filter(k=>j.can_lam.includes(k)).map(k=>k==='video'?'video':'hình ảnh');
+  log(SL,'Đã xong, mời khách xem bàn giao.'+(nt.length?' Lưu ý: '+nt.join(' và ')+' thật CHƯA tích hợp công cụ tạo, mới có bản mô tả bằng chữ.':''));
+  CUR.dn=CUR.tot;if(!Object.keys(CUR.out).length){CUR.st='THẤT BẠI';return fin(0)}CUR.st=(CUR.fail&&CUR.fail.length)?'ĐÃ BÀN GIAO (THIẾU '+CUR.fail.length+' MỤC)':'ĐÃ BÀN GIAO';return fin(1)
+ }catch(e){A.forEach(a=>{if(a.mode==='work')setMode(a,'idle')});CUR.st='THẤT BẠI';log(null,'Dừng do lỗi: '+er(e)+'. Phần đã xong vẫn được giữ ở tab Kết quả.');return fin(0)}}
+// ---- kết quả & tải về
+function tab(t){document.querySelectorAll('.tb button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));['vc','kq','ls','cd'].forEach(k=>$('#t-'+k).hidden=k!==t)}
+document.querySelector('.tb').addEventListener('click',e=>{const t=e.target.dataset.t;if(t)tab(t)});
+function blocks(t){const L=String(t==null?'':t).replace(/\r/g,'').split('\n'),o=[];let tb=null;
+ for(const raw of L){const l=raw.trim();
+  if(/^\|.*\|$/.test(l)){if(/^\|[\s:|-]+\|$/.test(l))continue;if(!tb){tb={k:'t',r:[]};o.push(tb)}tb.r.push(l.slice(1,-1).split('|').map(c=>c.trim()));continue}
+  tb=null;if(!l)continue;let m;
+  if(m=l.match(/^#{1,6}\s*(.+)$/))o.push({k:'h',t:m[1]});
+  else if(m=l.match(/^[-*•]\s+(.+)$/))o.push({k:'li',t:m[1]});
+  else if(m=l.match(/^(\d+)[.)]\s+(.+)$/))o.push({k:'li',t:m[1]+'. '+m[2],n:1});
+  else if(/^[-*_]{3,}$/.test(l)){}
+  else o.push({k:'p',t:l})}
+ return o}
+const clean=t=>String(t).replace(/\*\*/g,'').replace(/`/g,''),il=t=>esc(String(t)).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\[CẦN BỔ SUNG[^\]]*\]/g,'<mark>$&</mark>').replace(/`([^`]+)`/g,'$1');
+const rich=t=>blocks(t).map(b=>b.k==='h'?'<h5>'+il(b.t)+'</h5>':b.k==='li'?'<div class="li">'+(b.n?'':'• ')+il(b.t)+'</div>':b.k==='t'?'<table>'+b.r.map((r,i)=>'<tr>'+r.map(c=>'<'+(i?'td':'th')+'>'+il(c)+'</'+(i?'td':'th')+'>').join('')+'</tr>').join('')+'</table>':'<p>'+il(b.t)+'</p>').join('');
+const plain=t=>blocks(t).map(b=>b.k==='t'?b.r.map(r=>r.map(clean).join(' | ')).join('\n'):(b.k==='li'&&!b.n?'• ':'')+clean(b.t)).join('\n');
+const GRP=[['📝 Văn bản & nội dung',['noi_dung','chien_luoc','concept','seo','ads','bao_gia']],['🗓 Lịch đăng bài',['lich_dang']],['🎨 Bản mô tả thiết kế & video (chưa phải ảnh/video)',['thiet_ke','video']]];
+const has=(p,k)=>p.out&&p.out[k]!==undefined&&KEY[k]&&(k!=='lich_dang'||p.out[k].length);
+const sched=a=>'<details open class="rc"><summary>Lịch đăng bài <span class="tg">AI THẬT · CHƯA ĐĂNG</span></summary><table><tr><th>Ngày</th><th>Giờ</th><th>Kênh</th><th>Nội dung</th></tr>'+a.map(r=>'<tr><td>'+esc(String(r.ngay||''))+'</td><td>'+esc(String(r.gio||''))+'</td><td>'+esc(String(r.kenh||''))+'</td><td>'+esc(String(r.noi_dung||''))+'</td></tr>').join('')+'</table></details>';
+const docB=t=>blocks(t).map(b=>b.k==='t'?wtbl(b.r):wps((b.k==='li'&&!b.n?'• ':'')+clean(b.t),b.k==='h',b.k==='h'?24:0)).join('');
+const xe=v=>String(v==null?'':v).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const wr=(t,b,z)=>'<w:r><w:rPr>'+(b?'<w:b/>':'')+(z?'<w:sz w:val="'+z+'"/>':'')+'</w:rPr><w:t xml:space="preserve">'+xe(t)+'</w:t></w:r>';
+const wps=(t,b,z)=>String(t==null?'':t).split('\n').map(l=>'<w:p>'+wr(l,b,z)+'</w:p>').join('');
+const wtbl=rows=>'<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(q=>'<w:'+q+' w:val="single" w:sz="4" w:color="999999"/>').join('')+'</w:tblBorders></w:tblPr>'+rows.map((r,i)=>'<w:tr>'+r.map(c=>'<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/></w:tcPr>'+wps(c,i===0)+'</w:tc>').join('')+'</w:tr>').join('')+'</w:tbl><w:p/>';
+async function docxOf(p){const Z=new JSZip(),H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+ let b=wps('KẾT QUẢ CÔNG VIỆC — JK MEDIA CORPORATION',1,36)+wps('Ngày: '+dts(p)+' · '+(p.st||''))+wps('Yêu cầu khách hàng',1,28)+wps(p.v);
+ GRP.forEach(g=>g[1].filter(k=>has(p,k)).forEach(k=>{b+=wps(KEY[k][1],1,28)+(k==='lich_dang'?wtbl([['Ngày','Giờ','Kênh','Nội dung','Trạng thái']].concat(p.out[k].map(r=>[r.ngay,r.gio,r.kenh,r.noi_dung,'CHƯA ĐĂNG']))):docB(p.out[k]))}));
+ if(p.qc)b+=wps('Kiểm duyệt chất lượng',1,28)+wps(p.qc);
+ Z.file('[Content_Types].xml',H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+ Z.file('_rels/.rels',H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+ Z.file('word/document.xml',H+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+b+'<w:sectPr/></w:body></w:document>');
+ return Z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})}
+function xlsxOf(p){const wb=XLSX.utils.book_new(),ks=Object.keys(p.out||{}).filter(k=>has(p,k)&&k!=='lich_dang'),ap=XLSX.utils.book_append_sheet,sh=XLSX.utils.aoa_to_sheet;
+ ap(wb,sh([['Yêu cầu',p.v],['Ngày',dts(p)],['Trạng thái',p.st||''],['Kiểm duyệt',p.qc||'']]),'Tổng quan');
+ if(ks.length)ap(wb,sh([['Mục','Nội dung']].concat(ks.map(k=>[KEY[k][1],plain(p.out[k])]))),'Nội dung');
+ if(has(p,'lich_dang'))ap(wb,sh([['Ngày','Giờ','Kênh','Nội dung','Trạng thái']].concat(p.out.lich_dang.map(r=>[r.ngay,r.gio,r.kenh,r.noi_dung,'CHƯA ĐĂNG']))),'Lịch đăng');
+ return new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+async function dl2(f,mk,lib){if(!window[lib])return log(null,'Chưa tải được thư viện tạo file (cần kết nối mạng).');try{const d=await claude.use('downloads');if(!d)return log(null,'Không tải được ở chế độ xem này.');await d.save({filename:f,data:await mk()})}catch(e){log(null,'Không lưu được file: '+((e&&e.code)||'bị từ chối'))}}
+function showCur(p){try{showCur2(p)}catch(e){$('#rp').innerHTML='<small>Không hiển thị được kết quả: '+esc(String(e&&e.message||e))+'</small>'}}
+function showCur2(p){p=p||CUR;const R=$('#rp');
+ if(!p){R.innerHTML='<small>Chưa có kết quả. Kết quả sẽ hiện ở đây khi công ty làm xong.</small>';return}
+ if(p.run){R.innerHTML='<small>Đang thực hiện… kết quả sẽ hiện ở đây khi xong. Xem tiến trình ở tab “Công việc”.</small>';return}
+ let h='<b>'+esc(p.v||'')+'</b><div><small>'+dts(p)+'</small> <span class="tg">'+esc(p.st||'')+'</span></div>';
+ if(p.plan&&p.plan.can_hoi)h+='<div><b>Công ty cần hỏi thêm:</b> '+esc(p.plan.can_hoi)+'</div>';
+ let n=0;GRP.forEach(g=>{const ks=g[1].filter(k=>has(p,k));if(!ks.length)return;n+=ks.length;h+='<h4>'+g[0]+'</h4>'+ks.map(k=>k==='lich_dang'?sched(p.out[k]):'<details open class="rc"><summary>'+KEY[k][1]+' <span class="tg">'+(k==='thiet_ke'||k==='video'?'BẢN MÔ TẢ':'AI THẬT')+'</span></summary>'+rich(p.out[k])+'</details>').join('')});
+ if(p.media&&p.media.length){n+=p.media.length;h+='<h4>Hình ảnh &amp; video</h4>'+p.media.map(m=>m.type==='video'?'<video controls src="'+esc(m.url)+'" style="max-width:100%"></video>':'<img src="'+esc(m.url)+'" style="max-width:100%">').join('')}
+ const ms=((p.plan&&p.plan.can_lam)||[]).filter(k=>k==='thiet_ke'||k==='video').map(k=>k==='video'?'video':'hình ảnh');
+ if(ms.length)h+='<div><small>Lưu ý: khách cần '+ms.join(' và ')+' nhưng chưa tích hợp công cụ tạo nên chưa có file thật.</small></div>';
+ if(p.qc)h+='<div><small>'+esc(p.qc)+'</small></div>';if(p.fail&&p.fail.length)h+='<div><small>⚠ Mục chưa làm được do lỗi AI: '+esc(p.fail.join(', '))+'. Gửi yêu cầu tiếp theo để làm lại.</small></div>';
+ if(n)h+='<div class="row" style="margin-top:8px"><button id="dw" class="pr">Tải Word (.docx)</button><button id="dx">Tải Excel (.xlsx)</button></div>';
+ else if(!(p.plan&&p.plan.can_hoi))h+='<small>Dự án này chưa có kết quả.</small>';
+ if(p===CUR&&!busy&&(p.st||'').indexOf('ĐÃ BÀN GIAO')===0)h+='<h4>Bạn muốn công ty làm gì tiếp theo?</h4><textarea id="fu" rows="2" placeholder="Ví dụ: chỉnh lại bài viết, làm thêm kịch bản…"></textarea><button id="fb2" class="pr" style="margin-top:6px;width:100%">Gửi yêu cầu tiếp theo</button>';
+ R.innerHTML=h;
+ if($('#dw'))$('#dw').onclick=()=>dl2('ket-qua-jk-media.docx',()=>docxOf(p),'JSZip');if($('#dx'))$('#dx').onclick=()=>dl2('ket-qua-jk-media.xlsx',()=>xlsxOf(p),'XLSX');
+ if($('#fb2'))$('#fb2').onclick=()=>{const t=$('#fu').value.trim();if(t){$('#rq').value=t;rrun(p)}}}
+// ---- cài đặt
+let CS={theme:'auto',accent:'',lang:'tiếng Việt'};try{Object.assign(CS,JSON.parse(localStorage.getItem('jk5')||'{}'))}catch(e){}
+const LN=()=>CS.lang;
+function applyS(){const r=document.documentElement,dk=CS.theme==='dark'||(CS.theme==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);
+ if(CS.theme==='auto')r.removeAttribute('data-theme');else r.dataset.theme=CS.theme;
+ if(CS.accent)r.style.setProperty('--ac',CS.accent);else r.style.removeProperty('--ac');
+ sc.background=new THREE.Color(dk?0x0f1b33:0xbfe3ff);sc.fog=new THREE.Fog(dk?0x0f1b33:0xbfe3ff,110,270);GR1.material.color.set(dk?0x14301f:0x4f8f4a);GR2.material.color.set(dk?0x4a3a2a:0xb8955f)}
+$('#sTh').value=CS.theme;$('#sAc').value=CS.accent;$('#sLn').value=CS.lang;
+['sTh','sAc','sLn'].forEach(i=>$('#'+i).addEventListener('change',()=>{CS.theme=$('#sTh').value;CS.accent=$('#sAc').value;CS.lang=$('#sLn').value;try{localStorage.setItem('jk5',JSON.stringify(CS))}catch(e){}applyS()}));applyS();
+async function run(req){
+ if(busy)return log(null,'Đang chạy trình diễn, vui lòng chờ.');busy=true;log(null,'TRÌNH DIỄN hoạt ảnh — KHÔNG phải công việc thật, không tạo sản phẩm.');
+ const [CEO,CD,MK,CT,DS,VD,SE,AD,SL,QC]=A;
+ stage(0);log(SL,'Tiếp nhận yêu cầu: “'+req.slice(0,70)+(req.length>70?'…':'')+'”');
+ await job(SL,'Tiếp nhận & phân tích yêu cầu khách hàng',3500);
+ log(CEO,'Đánh giá mục tiêu và giao nhiệm vụ');await job(CEO,'Phân tích yêu cầu & giao nhiệm vụ',3500);
+ stage(1);log(CEO,'Triệu tập họp tại phòng họp');
+ const MS=[[-2.1,0],[2.1,0],[-2.1,2],[2.1,2],[0,3.4]];
+ await Promise.all([SL,CEO,MK,CT,DS].map((a,i)=>new Promise(r=>go(a,10,MS[i][0],MS[i][1],Math.PI,'meet',r))).concat(new Promise(r=>go(CD,10,0,-2.4,0,'present',r))));
+ for(const [a,t] of [[CD,'Đề xuất ý tưởng: món nổi bật + ưu đãi, màu sắc bắt mắt'],[MK,'Định hướng: khách địa phương, thông điệp khuyến mãi'],[CT,'Chuẩn bị nội dung: tiêu đề, ưu đãi, thông tin liên hệ'],[DS,'Nhận yêu cầu thiết kế poster']]){say(a,t);await sl(2500)}
+ stage(2);log(CEO,'Chốt kế hoạch, các bộ phận về khu vực chuyên môn');await Promise.all([SL,CEO,MK,CT,DS,CD].map(back));
+ await Promise.all([job(CT,'Viết nội dung poster & khuyến mãi',7000),job(DS,'Thiết kế poster',9000),job(MK,'Kiểm tra thông điệp & mục tiêu quảng cáo',6000),job(CD,'Giám sát định hướng sáng tạo',6000)]);
+ log(null,'Kết thúc trình diễn. Không có sản phẩm nào được tạo — QC, phê duyệt và bàn giao thật cần Giai đoạn 2 (Agent AI + máy chủ).');stage(-1);busy=false}
+$('#ex').onclick=()=>rrun();$('#dm').onclick=()=>run($('#rq').value||'Yêu cầu mẫu');$('#ac').onclick=()=>{auto=!auto;$('#ac').textContent='Camera tự động: '+(auto?'bật':'tắt')};
+let PJ=[];try{const s=JSON.parse(localStorage.getItem('jk')||'{}');PJ=(s.p||[]).map(p=>Object.assign(p,{out:p.out||{},log:p.log||[]},p.st==='ĐANG XỬ LÝ'?{st:'BỊ NGẮT',run:false}:{}));(s.t||[]).forEach((t,i)=>{if(A[i])A[i].tq=t})}catch(e){}
+let sT=0;function saveP(){if(CUR)CUR.upd=Date.now();try{localStorage.setItem('jk',JSON.stringify({p:PJ,t:A.map(a=>a.tq)}))}catch(e){}
+ if(DBC&&CUR){clearTimeout(sT);const c=CUR;sT=setTimeout(()=>{try{const o=JSON.parse(JSON.stringify(c));if(JSON.stringify(o).length<240000)DBC.doc('p'+c.id).set(o).catch(()=>{})}catch(e){}},1500)}}
+const IGM=[['text','Văn bản',['Claude','Gemini','ChatGPT (OpenAI)']],['image','Tạo ảnh',['Chưa chọn','Gemini Image / Imagen','OpenAI Image']],['video','Tạo video',['Chưa chọn','Google Veo','Công cụ video khác']],['seo','SEO (dữ liệu thật)',['Chưa chọn','Search Console + GA4 + PageSpeed']],['social','Đăng bài & Ads',['Chưa chọn','Meta (Facebook/Instagram)','TikTok','YouTube','Google Ads']],['db','Máy chủ & CSDL',['Chưa chọn','Supabase / PostgreSQL']]];
+const KN={'Gemini':'GEMINI_API_KEY','ChatGPT (OpenAI)':'OPENAI_API_KEY','Gemini Image / Imagen':'GEMINI_IMAGE_API_KEY','OpenAI Image':'OPENAI_IMAGE_API_KEY','Google Veo':'VEO_API_KEY','Công cụ video khác':'VIDEO_API_KEY','Search Console + GA4 + PageSpeed':'GOOGLE_SEO_API_KEY','Meta (Facebook/Instagram)':'META_API_KEY','TikTok':'TIKTOK_API_KEY','YouTube':'YOUTUBE_API_KEY','Google Ads':'GOOGLE_ADS_API_KEY','Supabase / PostgreSQL':'SUPABASE_KEY'};
+let IG={text:'Claude',gw:''},GW=0;try{Object.assign(IG,JSON.parse(localStorage.getItem('jk2')||'{}'))}catch(e){}
+const sv=()=>{try{localStorage.setItem('jk2',JSON.stringify(IG))}catch(e){}};
+const dup=m=>IGM.find(o=>o[0]!==m[0]&&IG['k_'+o[0]]&&IG['k_'+o[0]]===IG['k_'+m[0]]&&IG[o[0]]!==IG[m[0]]);
+function igs(m){const k=m[0],v=IG[k];if(k==='text'&&v==='Claude')return'Đã tích hợp (không cần khóa)';if(!v||v==='Chưa chọn')return'Chưa tích hợp';if(!IG['k_'+k])return'Thiếu tên khóa API riêng';const d=dup(m);if(d)return'⚠ Trùng tên khóa với mục “'+d[1]+'” (khác AI)';return GW?'Máy chủ phản hồi, chờ khóa API':'Đang chờ API'}
+function updIg(){IGM.forEach(m=>{const e=document.querySelector('[data-s="'+m[0]+'"]');if(e)e.textContent=igs(m)})}
+function buildIg(){$('#ig').innerHTML=IGM.map(m=>{const v=IG[m[0]]||m[2][0],cl=v==='Claude';return '<div style="margin-bottom:8px"><div class="sf" style="grid-template-columns:1fr 1fr"><span>'+m[1]+'</span><select data-k="'+m[0]+'">'+m[2].map(o=>'<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select></div><input data-kn="'+m[0]+'" placeholder="'+(cl?'Claude đã tích hợp sẵn, không cần khóa':'API riêng: tên khóa trên máy chủ, ví dụ '+(KN[v]||'TEN_KHOA_API'))+'" value="'+esc(IG['k_'+m[0]]||'')+'"'+(cl?' disabled':'')+'><small data-s="'+m[0]+'"></small></div>'}).join('')+'<h4>Máy chủ trung gian (giữ khóa API thật)</h4><input id="gw" placeholder="Địa chỉ máy chủ trung gian, ví dụ https://…" value="'+esc(IG.gw||'')+'"><button id="gt" style="margin-top:6px;width:100%">Kiểm tra kết nối máy chủ</button><small id="gm">Mỗi công cụ AI dùng một khóa riêng. Khóa thật chỉ đặt trên máy chủ trung gian; ở đây chỉ ghi TÊN khóa.</small>';
+ $('#gt').onclick=async()=>{const u=$('#gw').value.trim().replace(/\/$/,'');IG.gw=u;sv();if(!u)return $('#gm').textContent='Chưa nhập địa chỉ máy chủ.';$('#gm').textContent='Đang kiểm tra…';const c=new AbortController(),t=setTimeout(()=>c.abort(),6000);try{const r=await fetch(u+'/health',{signal:c.signal});GW=r.ok?1:0;$('#gm').textContent=r.ok?'Máy chủ phản hồi.':'Thất bại: máy chủ trả mã '+r.status}catch(e){GW=0;$('#gm').textContent='Thất bại: không gọi được. Nếu trang đang chạy trong claude.ai, trình duyệt chặn gọi ra ngoài; cần chạy trang trên máy chủ của bạn.'}clearTimeout(t)};updIg()}
+$('#ig').addEventListener('change',e=>{const t=e.target,k=t.dataset.k,n=t.dataset.kn;
+ if(k){IG[k]=t.value;sv();buildIg();return}
+ if(n){const v=t.value.trim();if(/^(sk-|AIza|ya29|gsk_|xai-|eyJ)/i.test(v)||(v.length>=30&&!/_/.test(v))){t.value='';IG['k_'+n]='';sv();$('#gm').textContent='⚠ Đó có vẻ là khóa thật. KHÔNG dán khóa vào trang này. Chỉ ghi TÊN khóa trên máy chủ, ví dụ GEMINI_API_KEY.';updIg();return}
+  IG['k_'+n]=v;sv();updIg()}});
+$('#tg').onclick=()=>{const m=$('#p').classList.toggle('min');$('#tg').textContent=m?'Mở rộng':'Thu gọn'};
+if(innerWidth<700)$('#tg').click();
+buildIg();renderHist();renderFiles();showCur();ck();log(null,'Chào Giám đốc. Nhấp vào nhân viên hoặc phòng để xem; bấm “Xem trình diễn” để xem hoạt ảnh.');
+</script></body></html>
