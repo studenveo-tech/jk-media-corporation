@@ -2184,4 +2184,889 @@
         const bx = 86 + ((i * 19) % 16) - 8;
         const bz = 53 + ((i * 29) % 16) - 8;
         const bh = 2.6 + (i % 5) * 1.7;
-        const bMesh = new THREE.Mesh(new THREE.BoxGeometry(1.75,
+        const bMesh = new THREE.Mesh(new THREE.BoxGeometry(1.75, bh, 1.75), skyMat);
+        bMesh.position.set(bx, 0.65 + bh / 2, bz);
+        vtGrp.add(bMesh);
+      }
+      const lh = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.72, 7.2, 14), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }));
+      lh.position.set(92, 4.2, 57);
+      const lhRedRing = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.58, 1.4, 14), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+      lhRedRing.position.set(92, 4.5, 57);
+      const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 10), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+      beacon.position.set(92, 8.0, 57);
+      vtGrp.add(lh, lhRedRing, beacon);
+      layerGroups.zones.add(vtGrp);
+
+      // 6. 100% Electric VinFast 3D Cars Moving Along Boulevards, Expressways & Bridges
+      const createDetailedCar = (bodyColorHex, isSUV = false) => {
+        const carGroup = new THREE.Group();
+        const len = isSUV ? 0.56 : 0.50;
+        const wid = isSUV ? 0.27 : 0.25;
+        const bodyH = isSUV ? 0.13 : 0.11;
+
+        const bodyMat = new THREE.MeshStandardMaterial({
+          color: bodyColorHex,
+          roughness: 0.22,
+          metalness: 0.48
+        });
+        const glassMat = new THREE.MeshStandardMaterial({
+          color: 0x0f172a,
+          emissive: 0x38bdf8,
+          emissiveIntensity: 0.22,
+          roughness: 0.12,
+          metalness: 0.85
+        });
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.85 });
+        const rimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.8, roughness: 0.2 });
+
+        // Lower chassis body
+        const chassis = new THREE.Mesh(new THREE.BoxGeometry(wid, bodyH, len), bodyMat);
+        chassis.position.y = 0.04 + bodyH / 2;
+        carGroup.add(chassis);
+
+        // Front aerodynamic bumper slope
+        const hood = new THREE.Mesh(new THREE.BoxGeometry(wid * 0.94, bodyH * 0.72, len * 0.28), bodyMat);
+        hood.position.set(0, 0.04 + bodyH * 0.42, len * 0.42);
+        hood.rotation.x = 0.18;
+        carGroup.add(hood);
+
+        // Upper glass cabin & roof cap
+        const cabinLen = isSUV ? len * 0.62 : len * 0.52;
+        const cabinH = isSUV ? 0.11 : 0.095;
+        const cabinZ = isSUV ? -0.04 : -0.03;
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(wid * 0.84, cabinH, cabinLen), glassMat);
+        cabin.position.set(0, 0.04 + bodyH + cabinH / 2 - 0.01, cabinZ);
+        carGroup.add(cabin);
+
+        const roofCap = new THREE.Mesh(new THREE.BoxGeometry(wid * 0.82, 0.02, cabinLen * 0.88), bodyMat);
+        roofCap.position.set(0, 0.04 + bodyH + cabinH - 0.005, cabinZ);
+        carGroup.add(roofCap);
+
+        // 4 Wheels with alloy hubs
+        const wheelGeo = new THREE.CylinderGeometry(0.052, 0.052, 0.04, 10);
+        wheelGeo.rotateZ(Math.PI / 2);
+        const hubGeo = new THREE.CylinderGeometry(0.028, 0.028, 0.044, 8);
+        hubGeo.rotateZ(Math.PI / 2);
+
+        [
+          [-wid * 0.48, len * 0.30],
+          [wid * 0.48, len * 0.30],
+          [-wid * 0.48, -len * 0.30],
+          [wid * 0.48, -len * 0.30]
+        ].forEach(wp => {
+          const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+          wheel.position.set(wp[0], 0.052, wp[1]);
+          const hub = new THREE.Mesh(hubGeo, rimMat);
+          hub.position.set(wp[0], 0.052, wp[1]);
+          carGroup.add(wheel, hub);
+        });
+
+        // Front LED Headlights (White-Cyan) & Rear Taillights (Red)
+        const frontLightMat = new THREE.MeshBasicMaterial({ color: 0xfef9c3 });
+        const rearLightMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+        [-wid * 0.32, wid * 0.32].forEach(lx => {
+          const fLight = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.026, 0.02), frontLightMat);
+          fLight.position.set(lx, 0.04 + bodyH * 0.55, len * 0.51);
+          const rLight = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.026, 0.02), rearLightMat);
+          rLight.position.set(lx, 0.04 + bodyH * 0.55, -len * 0.505);
+          carGroup.add(fLight, rLight);
+        });
+
+        return carGroup;
+      };
+
+      const evRoutes = [
+        { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-41, 0.62, -2.5), new THREE.Vector3(-25, 0.62, 1.8), new THREE.Vector3(-10, 0.62, -1.8), new THREE.Vector3(8, 0.62, -7.2), new THREE.Vector3(23, 0.62, -11.0)], false), laneOffset: 0.16, yOffset: 0.02, count: 10 },
+        { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-20, 0.62, 12.0), new THREE.Vector3(-4, 0.62, 12.2), new THREE.Vector3(12, 0.62, 12.0)], false), laneOffset: 0.16, yOffset: 0.02, count: 8 },
+        { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(20, 0.62, 4.2), new THREE.Vector3(33, 0.62, 8.5), new THREE.Vector3(46, 0.62, 19.0)], false), laneOffset: 0.16, yOffset: 0.02, count: 8 },
+        { curve: canGioBridgeCurve, laneOffset: 0.24, yOffset: 0.11, count: 12 },
+        { curve: vungTauBridgeCurve, laneOffset: 0.26, yOffset: 0.11, count: 14 },
+        { curve: westToEastExpressway, laneOffset: 0.36, yOffset: 0.10, count: 18 },
+        { curve: q1ToQ7Road, laneOffset: 0.30, yOffset: 0.10, count: 10 },
+        { curve: interchangeLink, laneOffset: 0.24, yOffset: 0.10, count: 8 }
+      ];
+
+      const carPalette = [0x10b981, 0x38bdf8, 0xf8fafc, 0xfbbf24, 0x94a3b8, 0x0ea5e9];
+      evRoutes.forEach((routeObj, rIdx) => {
+        for (let v = 0; v < routeObj.count; v++) {
+          const evCar = createDetailedCar(carPalette[(v + rIdx) % carPalette.length], v % 2 === 0);
+          layerGroups.traffic.add(evCar);
+          movingVehicles.push({
+            mesh: evCar,
+            curve: routeObj.curve,
+            laneOffset: routeObj.laneOffset,
+            yOffset: routeObj.yOffset,
+            t: v / routeObj.count,
+            speed: 0.00095 + ((rIdx % 3) * 0.00018),
+            dir: v % 2 === 0 ? 1 : -1
+          });
+        }
+      });
+    }
+
+    // =========================================================================
+    // 7. FIREWORKS, HOTSPOT PINS, CAMERA CONTROLS & LIGHTING MODES
+    // =========================================================================
+    function buildFireworks() {
+      fireworksGroup = new THREE.Group();
+      fireworksGroup.visible = false;
+
+      const shellConfigs = [
+        { origin: new THREE.Vector3(47.2, 26.5, 20.2), coreColor: 0xfbbf24, tipColor: 0xfef08a, radius: 6.2, phase: 0.0, speed: 0.48 },
+        { origin: new THREE.Vector3(-10.8, 15.5, -2.4), coreColor: 0x38bdf8, tipColor: 0xf472b6, radius: 5.4, phase: 0.35, speed: 0.52 },
+        { origin: new THREE.Vector3(-41.5, 16.5, -4.5), coreColor: 0xf43f5e, tipColor: 0xfbbf24, radius: 5.2, phase: 0.68, speed: 0.50 },
+        { origin: new THREE.Vector3(16.0, 17.5, -6.5), coreColor: 0x34d399, tipColor: 0x38bdf8, radius: 5.5, phase: 0.18, speed: 0.46 },
+        { origin: new THREE.Vector3(32.0, 21.5, 9.5), coreColor: 0xa78bfa, tipColor: 0xfde047, radius: 5.8, phase: 0.52, speed: 0.49 }
+      ];
+
+      shellConfigs.forEach(cfg => {
+        const shellGroup = new THREE.Group();
+        shellGroup.position.copy(cfg.origin);
+
+        // Rising rocket streak before explosion
+        const rocketMat = new THREE.MeshBasicMaterial({ color: cfg.tipColor, transparent: true, opacity: 0.9 });
+        const rocket = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.16, 2.2, 6), rocketMat);
+        shellGroup.add(rocket);
+
+        // Multi-ring Chrysanthemum & Willow Firework Rays (LineSegments with Vertex Colors)
+        const rayCount = 140;
+        const positions = new Float32Array(rayCount * 6);
+        const colors = new Float32Array(rayCount * 6);
+        const dirs = [];
+
+        const cCore = new THREE.Color(cfg.coreColor);
+        const cTip = new THREE.Color(cfg.tipColor);
+
+        for (let i = 0; i < rayCount; i++) {
+          const u = Math.random();
+          const v = Math.random();
+          const theta = u * 2.0 * Math.PI;
+          const phi = Math.acos(2.0 * v - 1.0);
+          const speedScale = (i < 45 ? 0.55 : 1.0) * (0.82 + Math.random() * 0.32);
+
+          dirs.push(new THREE.Vector3(
+            Math.sin(phi) * Math.cos(theta) * speedScale,
+            Math.cos(phi) * speedScale,
+            Math.sin(phi) * Math.sin(theta) * speedScale
+          ));
+
+          colors[i * 6] = cCore.r; colors[i * 6 + 1] = cCore.g; colors[i * 6 + 2] = cCore.b;
+          colors[i * 6 + 3] = cTip.r; colors[i * 6 + 4] = cTip.g; colors[i * 6 + 5] = cTip.b;
+        }
+
+        const rayGeo = new THREE.BufferGeometry();
+        rayGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        rayGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        const rayMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending });
+        const burstRays = new THREE.LineSegments(rayGeo, rayMat);
+
+        // Glowing Tip Sparkles
+        const tipPositions = new Float32Array(rayCount * 3);
+        const tipGeo = new THREE.BufferGeometry();
+        tipGeo.setAttribute('position', new THREE.BufferAttribute(tipPositions, 3));
+        const tipMat = new THREE.PointsMaterial({ color: cfg.tipColor, size: 0.42, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending });
+        const tipPoints = new THREE.Points(tipGeo, tipMat);
+
+        shellGroup.add(burstRays, tipPoints);
+        shellGroup.userData = {
+          cfg,
+          rocket,
+          rocketMat,
+          burstRays,
+          rayMat,
+          tipPoints,
+          tipMat,
+          dirs
+        };
+        fireworksGroup.add(shellGroup);
+      });
+
+      scene.add(fireworksGroup);
+    }
+
+    function createHotspotDOMPins() {
+      const overlay = document.getElementById('hotspot-overlay');
+      overlay.innerHTML = '';
+      const badgeStyles = {
+        amber: 'border-amber-400/70 bg-slate-950/85 text-amber-200',
+        cyan: 'border-cyan-400/70 bg-slate-950/85 text-cyan-200',
+        emerald: 'border-emerald-400/70 bg-slate-950/85 text-emerald-200',
+        pink: 'border-pink-400/70 bg-slate-950/85 text-pink-200',
+        sky: 'border-sky-400/70 bg-slate-950/85 text-sky-200'
+      };
+      HOTSPOTS.forEach(hs => {
+        const el = document.createElement('div');
+        el.className = `hotspot-pin pointer-events-auto rounded-xl px-2.5 py-1 border shadow-lg backdrop-blur-md ${badgeStyles[hs.color] || badgeStyles.cyan}`;
+        el.innerHTML = `
+          <div class="text-[9px] font-extrabold tracking-wider opacity-80 uppercase">${hs.tag}</div>
+          <div class="text-[11px] font-bold text-white whitespace-nowrap">${hs.label}</div>
+        `;
+        el.onclick = () => {
+          droneTourActive = false;
+          updateDroneButtonUI();
+          applyCameraPreset(hs.cam);
+          if (typeof hs.mod === 'number') selectTrainingModule(hs.mod, false);
+        };
+        overlay.appendChild(el);
+        hotspotElements[hs.id] = el;
+      });
+    }
+
+    function updateHotspotPositions() {
+      const overlay = document.getElementById('hotspot-overlay');
+      if (!showHotspotPins) {
+        overlay.style.display = 'none';
+        return;
+      }
+      overlay.style.display = 'block';
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      HOTSPOTS.forEach(hs => {
+        const el = hotspotElements[hs.id];
+        if (!el) return;
+        const dist = camera.position.distanceTo(hs.pos3D);
+        const proj = hs.pos3D.clone().project(camera);
+        if (proj.z > 1 || proj.x < -1.1 || proj.x > 1.1 || proj.y < -1.1 || proj.y > 1.1) {
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+          return;
+        }
+        const sx = (proj.x * 0.5 + 0.5) * w;
+        const sy = (-proj.y * 0.5 + 0.5) * h;
+        const scale = Math.max(0.68, Math.min(1.05, 58 / Math.max(dist, 24)));
+        el.style.left = `${sx}px`;
+        el.style.top = `${sy}px`;
+        el.style.opacity = hs.isRegional && dist < 32 ? '0.35' : '1';
+        el.style.pointerEvents = 'auto';
+        el.style.transform = `translate(-50%, -100%) scale(${scale.toFixed(2)})`;
+      });
+    }
+
+    function setLightingMode(mode) {
+      currentLightMode = mode;
+      ['day', 'sunset', 'night'].forEach(m => {
+        const btn = document.getElementById(`btn-light-${m}`);
+        if (!btn) return;
+        btn.className = m === mode
+          ? 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-400 text-slate-950 transition'
+          : 'px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition';
+      });
+
+      const isNight = mode === 'night';
+      const isSunset = mode === 'sunset';
+
+      if (mode === 'day') {
+        scene.background = new THREE.Color(0x0b3954);
+        scene.fog = new THREE.FogExp2(0x0b3954, 0.0038);
+        sunLight.color.setHex(0xfffbeb);
+        sunLight.intensity = 0.92;
+        sunLight.position.set(45, 75, 35);
+        hemiLight.intensity = 0.72;
+        renderer.toneMappingExposure = 0.96;
+        if (waterUniforms) {
+          waterUniforms.uDeepColor.value.setHex(0x064e6e);
+          waterUniforms.uLagoonColor.value.setHex(0x0ea5e9);
+          waterUniforms.uSunIntensity.value = 0.65;
+        }
+      } else if (isSunset) {
+        scene.background = new THREE.Color(0x2a183b);
+        scene.fog = new THREE.FogExp2(0x2a183b, 0.0044);
+        sunLight.color.setHex(0xfb923c);
+        sunLight.intensity = 1.05;
+        sunLight.position.set(-65, 22, 40);
+        hemiLight.intensity = 0.55;
+        renderer.toneMappingExposure = 1.02;
+        if (waterUniforms) {
+          waterUniforms.uDeepColor.value.setHex(0x1e1b4b);
+          waterUniforms.uLagoonColor.value.setHex(0x0284c7);
+          waterUniforms.uSunIntensity.value = 0.95;
+        }
+      } else {
+        scene.background = new THREE.Color(0x040d1a);
+        scene.fog = new THREE.FogExp2(0x040d1a, 0.0048);
+        sunLight.color.setHex(0x38bdf8);
+        sunLight.intensity = 0.28;
+        sunLight.position.set(-30, 50, -30);
+        hemiLight.intensity = 0.34;
+        renderer.toneMappingExposure = 1.15;
+        if (waterUniforms) {
+          waterUniforms.uDeepColor.value.setHex(0x031527);
+          waterUniforms.uLagoonColor.value.setHex(0x0369a1);
+          waterUniforms.uSunIntensity.value = 0.35;
+        }
+      }
+
+      // Toggle Lit Windows, Street Lamps, Night PointLights & Fireworks
+      layerGroups.buildings.traverse(obj => {
+        if (obj.material && obj.material.userData && obj.material.userData.isLitBuilding) {
+          obj.material.emissiveIntensity = isNight ? 0.95 : (isSunset ? 0.45 : 0.0);
+        }
+      });
+      layerGroups.zones.traverse(obj => {
+        if (obj.material && obj.material.userData && obj.material.userData.isLitBuilding) {
+          obj.material.emissiveIntensity = isNight ? 0.92 : (isSunset ? 0.45 : 0.0);
+        }
+      });
+      lampBulbs.forEach(mat => {
+        mat.color.setHex(isNight || isSunset ? 0xfef08a : 0x94a3b8);
+      });
+      nightPointLights.forEach(pl => {
+        pl.intensity = isNight ? pl.userData.maxIntensity : (isSunset ? pl.userData.maxIntensity * 0.45 : 0);
+      });
+      if (fireworksGroup) {
+        fireworksGroup.visible = isNight;
+        fireworksActive = isNight;
+      }
+    }
+
+    function applyCameraPreset(preset) {
+      camState.desiredTarget.set(preset.target[0], preset.target[1], preset.target[2]);
+      camState.desiredRadius = preset.radius;
+      camState.desiredTheta = preset.theta;
+      camState.desiredPhi = preset.phi;
+    }
+
+    function resetCameraOverview() {
+      droneTourActive = false;
+      updateDroneButtonUI();
+      applyCameraPreset(WAYPOINTS[0]);
+    }
+
+    function focusStreetView() {
+      droneTourActive = false;
+      updateDroneButtonUI();
+      applyCameraPreset({ target: [42, 1.8, 15], radius: 9.5, theta: 0.72, phi: 1.28 });
+    }
+
+    function toggleHotspotPins() {
+      showHotspotPins = !showHotspotPins;
+      const btn = document.getElementById('btn-toggle-pins');
+      if (btn) btn.textContent = showHotspotPins ? '📍 Nhãn 3D: Bật' : '📍 Nhãn 3D: Tắt';
+    }
+
+    function toggleDroneTour() {
+      droneTourActive = !droneTourActive;
+      updateDroneButtonUI();
+    }
+
+    function updateDroneButtonUI() {
+      const btn = document.getElementById('btn-drone-tour');
+      if (!btn) return;
+      btn.textContent = droneTourActive ? '⏹ Dừng Bay' : '🚁 Bay Tham Quan';
+    }
+
+    function toggleLayer(layerKey, visible) {
+      if (layerGroups[layerKey]) layerGroups[layerKey].visible = visible;
+    }
+
+    function flyToZone(zoneKey) {
+      droneTourActive = false;
+      updateDroneButtonUI();
+      const map = {
+        khuA: { target: [-26, 1.5, -2.5], radius: 28, theta: -0.2, phi: 0.65 },
+        khuB: { target: [10, 1.5, -8.5], radius: 28, theta: 0.2, phi: 0.65 },
+        khuC: { target: [35, 3.0, 12.0], radius: 28, theta: 0.55, phi: 0.66 },
+        khuD: { target: [-4, 1.2, 11.0], radius: 26, theta: 0.0, phi: 0.64 }
+      };
+      if (map[zoneKey]) applyCameraPreset(map[zoneKey]);
+    }
+
+    function setupCameraControls() {
+      const dom = renderer.domElement;
+      let isDragging = false;
+      let dragButton = 0;
+      let prevX = 0, prevY = 0;
+
+      dom.addEventListener('contextmenu', e => e.preventDefault());
+      dom.addEventListener('mousedown', e => {
+        isDragging = true;
+        dragButton = e.button;
+        prevX = e.clientX;
+        prevY = e.clientY;
+        droneTourActive = false;
+        updateDroneButtonUI();
+      });
+      window.addEventListener('mouseup', () => { isDragging = false; });
+      window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        const dx = e.clientX - prevX;
+        const dy = e.clientY - prevY;
+        prevX = e.clientX;
+        prevY = e.clientY;
+
+        if (dragButton === 0) {
+          camState.desiredTheta -= dx * 0.0055;
+          camState.desiredPhi = Math.max(0.18, Math.min(1.42, camState.desiredPhi - dy * 0.0055));
+        } else {
+          const panSpeed = camState.radius * 0.0014;
+          const forward = new THREE.Vector3(-Math.sin(camState.theta), 0, -Math.cos(camState.theta));
+          const right = new THREE.Vector3(Math.cos(camState.theta), 0, -Math.sin(camState.theta));
+          camState.desiredTarget.addScaledVector(right, -dx * panSpeed);
+          camState.desiredTarget.addScaledVector(forward, dy * panSpeed);
+        }
+      });
+
+      dom.addEventListener('wheel', e => {
+        e.preventDefault();
+        droneTourActive = false;
+        updateDroneButtonUI();
+        camState.desiredRadius = Math.max(4.5, Math.min(115, camState.desiredRadius + e.deltaY * 0.035));
+      }, { passive: false });
+
+      // Touch Support
+      let lastTouchDist = 0;
+      dom.addEventListener('touchstart', e => {
+        droneTourActive = false;
+        updateDroneButtonUI();
+        if (e.touches.length === 1) {
+          isDragging = true;
+          prevX = e.touches[0].clientX;
+          prevY = e.touches[0].clientY;
+        } else if (e.touches.length === 2) {
+          lastTouchDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+        }
+      }, { passive: true });
+
+      dom.addEventListener('touchmove', e => {
+        if (e.touches.length === 1 && isDragging) {
+          const dx = e.touches[0].clientX - prevX;
+          const dy = e.touches[0].clientY - prevY;
+          prevX = e.touches[0].clientX;
+          prevY = e.touches[0].clientY;
+          camState.desiredTheta -= dx * 0.006;
+          camState.desiredPhi = Math.max(0.18, Math.min(1.42, camState.desiredPhi - dy * 0.006));
+        } else if (e.touches.length === 2) {
+          const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          camState.desiredRadius = Math.max(4.5, Math.min(115, camState.desiredRadius - (dist - lastTouchDist) * 0.08));
+          lastTouchDist = dist;
+        }
+      }, { passive: true });
+
+      dom.addEventListener('touchend', () => { isDragging = false; });
+
+      window.addEventListener('keydown', e => {
+        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+        keyState[e.key.toLowerCase()] = true;
+      });
+      window.addEventListener('keyup', e => { keyState[e.key.toLowerCase()] = false; });
+    }
+
+    function init3DScene() {
+      const container = document.getElementById('canvas-container');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0b3954);
+      scene.fog = new THREE.FogExp2(0x0b3954, 0.0038);
+
+      camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.2, 450);
+      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 0.96;
+      container.appendChild(renderer.domElement);
+
+      hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x0f293a, 0.72);
+      scene.add(hemiLight);
+
+      sunLight = new THREE.DirectionalLight(0xfffbeb, 0.92);
+      sunLight.position.set(45, 75, 35);
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.width = 2048;
+      sunLight.shadow.mapSize.height = 2048;
+      sunLight.shadow.camera.near = 10;
+      sunLight.shadow.camera.far = 200;
+      const d = 65;
+      sunLight.shadow.camera.left = -d;
+      sunLight.shadow.camera.right = d;
+      sunLight.shadow.camera.top = d;
+      sunLight.shadow.camera.bottom = -d;
+      scene.add(sunLight);
+
+      // Night Architectural Accent PointLights
+      const addNightLight = (x, y, z, color, maxInt, dist) => {
+        const pl = new THREE.PointLight(color, 0, dist);
+        pl.position.set(x, y, z);
+        pl.userData = { maxIntensity: maxInt };
+        scene.add(pl);
+        nightPointLights.push(pl);
+      };
+      addNightLight(47.2, 14, 20.2, 0xfbbf24, 2.2, 34);
+      addNightLight(-10.8, 6, -2.4, 0x38bdf8, 1.8, 26);
+      addNightLight(-41.5, 7, -4.5, 0xf472b6, 1.8, 26);
+      addNightLight(3.5, 6, -9.8, 0x34d399, 1.5, 24);
+      // Regional & Outer Areas Night Lighting (Quận 1, Quận 7, Long Thành, Miền Tây, Vũng Tàu, Cầu Vượt Biển)
+      addNightLight(-8.0, 14, -74.0, 0xfbbf24, 2.6, 48);
+      addNightLight(-62.0, 12, -48.0, 0x38bdf8, 2.2, 42);
+      addNightLight(70.0, 14, -56.0, 0x7dd3fc, 2.5, 50);
+      addNightLight(-106.0, 11, -24.0, 0xfde047, 2.1, 42);
+      addNightLight(88.0, 13, 54.0, 0xfb923c, 2.4, 46);
+      addNightLight(64.0, 10, 35.0, 0xfef08a, 1.9, 36);
+      addNightLight(-49.0, 9, -26.0, 0x38bdf8, 1.7, 34);
+
+      Object.values(layerGroups).forEach(g => scene.add(g));
+
+      createArchitecturalTextures();
+      buildWaterAndMangroves();
+      buildZonesAndCanals();
+      buildIconicLandmarks();
+      buildInfrastructureAndFixedMetro();
+      buildFireworks();
+      createHotspotDOMPins();
+      setupCameraControls();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // =========================================================================
+    // 8. ACADEMY UI (5 MODULES, SALES PITCH / ROI, 10-QUESTION QUIZ & CERT)
+    // =========================================================================
+    let drawerOpen = true;
+    function toggleLeftDrawer() {
+      drawerOpen = !drawerOpen;
+      const drawer = document.getElementById('left-drawer');
+      const btn = document.getElementById('btn-toggle-drawer');
+      drawer.style.transform = drawerOpen ? 'translateX(0)' : 'translateX(-110%)';
+      btn.textContent = drawerOpen ? '◀ Thu gọn Học Viện' : '▶ Mở Học Viện Đào Tạo';
+    }
+
+    function switchDrawerTab(tab) {
+      ['modules', 'sales', 'quiz'].forEach(t => {
+        document.getElementById(`tab-panel-${t}`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        btn.className = t === tab
+          ? 'py-2.5 text-cyan-300 border-b-2 border-cyan-400 bg-cyan-500/10'
+          : 'py-2.5 text-slate-400 hover:text-slate-200 transition';
+      });
+    }
+
+    function selectTrainingModule(idx, moveCam = true) {
+      activeModuleIndex = idx;
+      const mod = TRAINING_MODULES[idx];
+      const pillsEl = document.getElementById('module-pills');
+      pillsEl.innerHTML = TRAINING_MODULES.map((m, i) => `
+        <button onclick="selectTrainingModule(${i}, true)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${i === idx ? 'bg-cyan-400 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+          Bài ${i + 1}
+        </button>
+      `).join('');
+
+      document.getElementById('module-detail-card').innerHTML = `
+        <div class="bg-slate-900/75 border border-cyan-500/30 rounded-xl p-3 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-cyan-500/20 text-cyan-300">${mod.badge}</span>
+            <button onclick="applyCameraPreset(TRAINING_MODULES[${idx}].cam)" class="text-[11px] font-bold text-amber-300 hover:underline">🎯 Bay tới góc nhìn 3D</button>
+          </div>
+          <h2 class="text-sm font-extrabold text-white leading-snug">${mod.title}</h2>
+          <p class="text-xs text-slate-300 leading-relaxed">${mod.summary}</p>
+          <div class="space-y-1.5 pt-1">
+            <div class="text-[11px] font-bold uppercase text-emerald-300">Điểm nhấn cốt lõi:</div>
+            ${mod.highlights.map(h => `<div class="text-xs text-slate-200 bg-slate-800/70 rounded-lg p-2 border border-slate-700/60 leading-relaxed">• ${h}</div>`).join('')}
+          </div>
+          <div class="bg-amber-500/15 border border-amber-400/40 rounded-lg p-2.5 text-xs text-amber-100">
+            <span class="font-extrabold text-amber-300">💡 Bí quyết chốt sale:</span> ${mod.pitchTip}
+          </div>
+        </div>
+      `;
+
+      if (moveCam && mod.cam) {
+        droneTourActive = false;
+        updateDroneButtonUI();
+        applyCameraPreset(mod.cam);
+      }
+    }
+
+    function selectPersona(idx) {
+      [0, 1, 2].forEach(i => {
+        const btn = document.getElementById(`persona-btn-${i}`);
+        btn.className = i === idx
+          ? 'py-1.5 px-2 rounded-lg text-[11px] font-bold bg-amber-500/20 text-amber-200 border border-amber-400/50'
+          : 'py-1.5 px-2 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700';
+      });
+      const p = PERSONA_SCRIPTS[idx];
+      document.getElementById('persona-content').innerHTML = `
+        <div class="font-bold text-white mb-1">${p.title}:</div>
+        ${p.points.map(pt => `<p>${pt}</p>`).join('')}
+      `;
+    }
+
+    function updateROICalculator() {
+      const cap = parseFloat(document.getElementById('roi-capital-slider').value);
+      const growth = parseFloat(document.getElementById('roi-growth-slider').value);
+      const profit = cap * (growth / 100);
+      const total = cap + profit;
+      document.getElementById('roi-capital-label').textContent = `${cap} Tỷ VNĐ`;
+      document.getElementById('roi-growth-label').textContent = `+${growth}%`;
+      document.getElementById('roi-profit-val').textContent = `+${profit.toFixed(2)} Tỷ VNĐ`;
+      document.getElementById('roi-total-val').textContent = `${total.toFixed(2)} Tỷ VNĐ`;
+    }
+
+    const userQuizAnswers = new Array(QUIZ_QUESTIONS.length).fill(null);
+    let quizSubmitted = false;
+
+    function renderQuizUI() {
+      const container = document.getElementById('quiz-container');
+      let score = 0;
+      if (quizSubmitted) {
+        QUIZ_QUESTIONS.forEach((q, i) => { if (userQuizAnswers[i] === q.ans) score++; });
+      }
+
+      let html = '';
+      if (quizSubmitted) {
+        const passed = score >= 8;
+        html += `
+          <div class="rounded-xl p-3 border ${passed ? 'bg-emerald-500/20 border-emerald-400' : 'bg-amber-500/20 border-amber-400'} space-y-2">
+            <div class="text-sm font-extrabold text-white">Kết quả sát hạch: ${score}/${QUIZ_QUESTIONS.length} điểm</div>
+            <p class="text-xs text-slate-200">${passed ? 'Chúc mừng! Bạn đã đạt chuẩn Chuyên Viên Tư Vấn Vinhomes Green Paradise Cần Giờ.' : 'Bạn cần đạt tối thiểu 8/10 điểm để nhận chứng nhận. Hãy ôn tập 5 chuyên đề và thử lại!'}</p>
+            ${passed ? `
+              <div class="bg-slate-950/90 border border-amber-400/60 rounded-xl p-3 text-center space-y-1.5">
+                <div class="text-[10px] font-bold tracking-widest text-amber-300 uppercase">Vinhomes Green Paradise Academy</div>
+                <div class="text-xs font-extrabold text-white uppercase">Chứng Nhận Chuyên Viên Tư Vấn</div>
+                <input type="text" placeholder="Nhập họ và tên của bạn..." class="w-full text-center text-xs font-bold bg-slate-900 border border-slate-700 rounded-lg py-1.5 px-2 text-cyan-300 focus:outline-none focus:border-amber-400" />
+                <div class="text-[10px] text-emerald-300">Đạt chuẩn kiến thức Quy hoạch 2.870 Ha & Mô hình ESG+ C++</div>
+              </div>
+            ` : ''}
+            <button onclick="resetQuiz()" class="w-full py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white">Làm lại bài sát hạch</button>
+          </div>
+        `;
+      }
+
+      html += QUIZ_QUESTIONS.map((item, qIdx) => `
+        <div class="bg-slate-900/75 border border-slate-700/70 rounded-xl p-2.5 space-y-1.5">
+          <div class="text-xs font-bold text-white">Câu ${qIdx + 1}: ${item.q}</div>
+          <div class="space-y-1">
+            ${item.options.map((opt, oIdx) => {
+              let cls = 'bg-slate-800/80 border-slate-700 text-slate-200 hover:bg-slate-700';
+              if (quizSubmitted) {
+                if (oIdx === item.ans) cls = 'bg-emerald-500/30 border-emerald-400 text-emerald-200 font-bold';
+                else if (userQuizAnswers[qIdx] === oIdx) cls = 'bg-rose-500/30 border-rose-400 text-rose-200';
+              } else if (userQuizAnswers[qIdx] === oIdx) {
+                cls = 'bg-cyan-500/30 border-cyan-400 text-cyan-200 font-bold';
+              }
+              return `<button onclick="selectQuizOption(${qIdx}, ${oIdx})" class="w-full text-left px-2.5 py-1.5 rounded-lg border text-[11px] transition ${cls}">${opt}</button>`;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      if (!quizSubmitted) {
+        html += `<button onclick="submitQuiz()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-500 text-slate-950 font-extrabold text-xs shadow-lg hover:opacity-95 transition">Nộp Bài & Nhận Chứng Nhận</button>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function selectQuizOption(qIdx, oIdx) {
+      if (quizSubmitted) return;
+      userQuizAnswers[qIdx] = oIdx;
+      renderQuizUI();
+    }
+
+    function submitQuiz() {
+      quizSubmitted = true;
+      renderQuizUI();
+    }
+
+    function resetQuiz() {
+      userQuizAnswers.fill(null);
+      quizSubmitted = false;
+      renderQuizUI();
+    }
+
+    function buildBottomWaypoints() {
+      const bar = document.getElementById('bottom-waypoints');
+      bar.innerHTML = WAYPOINTS.map((wp, idx) => `
+        <button onclick="droneTourActive=false; updateDroneButtonUI(); applyCameraPreset(WAYPOINTS[${idx}]);" class="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-slate-800/90 hover:bg-cyan-500/30 text-slate-200 hover:text-white border border-slate-700/80 whitespace-nowrap transition">
+          ${wp.name}
+        </button>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 9. MAIN ANIMATION LOOP
+    // =========================================================================
+    let trainProgress = 0.05;
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.getElapsedTime();
+
+      if (waterUniforms) waterUniforms.uTime.value = elapsed;
+
+      // Keyboard WASD / Arrow Navigation
+      const moveSpeed = camState.radius * 0.65 * dt;
+      const forward = new THREE.Vector3(-Math.sin(camState.theta), 0, -Math.cos(camState.theta));
+      const right = new THREE.Vector3(Math.cos(camState.theta), 0, -Math.sin(camState.theta));
+      if (keyState['w'] || keyState['arrowup']) camState.desiredTarget.addScaledVector(forward, moveSpeed);
+      if (keyState['s'] || keyState['arrowdown']) camState.desiredTarget.addScaledVector(forward, -moveSpeed);
+      if (keyState['a'] || keyState['arrowleft']) camState.desiredTarget.addScaledVector(right, -moveSpeed);
+      if (keyState['d'] || keyState['arrowright']) camState.desiredTarget.addScaledVector(right, moveSpeed);
+
+      if (droneTourActive) {
+        droneAngle += dt * 0.22;
+        camState.desiredTarget.set(Math.cos(droneAngle) * 12, 2.0, Math.sin(droneAngle) * 6);
+        camState.desiredTheta = droneAngle * 0.85;
+        camState.desiredRadius = 46 + Math.sin(droneAngle * 2) * 8;
+        camState.desiredPhi = 0.66;
+      }
+
+      // Smooth Camera Damping
+      camState.target.lerp(camState.desiredTarget, 0.1);
+      camState.radius += (camState.desiredRadius - camState.radius) * 0.1;
+      camState.theta += (camState.desiredTheta - camState.theta) * 0.1;
+      camState.phi += (camState.desiredPhi - camState.phi) * 0.1;
+
+      camera.position.set(
+        camState.target.x + camState.radius * Math.sin(camState.phi) * Math.sin(camState.theta),
+        camState.target.y + camState.radius * Math.cos(camState.phi),
+        camState.target.z + camState.radius * Math.sin(camState.phi) * Math.cos(camState.theta)
+      );
+      camera.lookAt(camState.target);
+
+      // Update Live 2D Mini-Map Camera Dot
+      const camDot = document.getElementById('minimap-cam-dot');
+      if (camDot) {
+        camDot.setAttribute('cx', Math.max(-105, Math.min(105, camState.target.x)).toFixed(1));
+        camDot.setAttribute('cy', Math.max(-80, Math.min(65, camState.target.z)).toFixed(1));
+      }
+
+      // 1. High-Speed Metro 350 km/h (5-Car Bullet Train along Viaduct Curve)
+      if (metroCurve && trainCars.length > 0) {
+        trainProgress = (trainProgress + dt * 0.042) % 1;
+        for (let c = 0; c < trainCars.length; c++) {
+          const u = (trainProgress - c * metroArcStep + 1) % 1;
+          const pt = metroCurve.getPointAt(u);
+          const tan = metroCurve.getTangentAt(u).normalize();
+          const car = trainCars[c];
+          car.position.copy(pt);
+          car.lookAt(pt.clone().add(tan));
+        }
+      }
+
+      // 2. Electric VinFast Vehicles Moving Along Boulevards, Highways & Sea Bridges
+      movingVehicles.forEach(v => {
+        v.t = (v.t + v.speed * v.dir + 1) % 1;
+        const pt = v.curve.getPointAt(v.t);
+        const tan = v.curve.getTangentAt(v.t).normalize();
+        const sideOffset = new THREE.Vector3(-tan.z, 0, tan.x).normalize().multiplyScalar(v.dir * v.laneOffset);
+        v.mesh.position.set(pt.x + sideOffset.x, pt.y + v.yOffset, pt.z + sideOffset.z);
+        v.mesh.lookAt(v.mesh.position.clone().addScaledVector(tan, v.dir));
+      });
+
+      // 3. Cruising Luxury Yachts in Paradise Lagoon & East Sea
+      movingYachts.forEach(y => {
+        y.t = (y.t + y.speed) % 1;
+        const pt = y.curve.getPointAt(y.t);
+        const tan = y.curve.getTangentAt(y.t).normalize();
+        y.mesh.position.copy(pt);
+        y.mesh.lookAt(pt.clone().add(tan));
+      });
+
+      // 4. Airplanes Circling Over Long Thanh International Airport & Ferris Wheel Rotation
+      movingAirplanes.forEach((ap, idx) => {
+        const ang = elapsed * 0.35 + idx * Math.PI;
+        const ax = 70 + Math.cos(ang) * 15;
+        const az = -56 + Math.sin(ang) * 11;
+        ap.position.set(ax, 9.0 + Math.sin(elapsed * 1.2) * 0.45, az);
+        const nextAng = ang + 0.04;
+        const nextX = 70 + Math.cos(nextAng) * 15;
+        const nextZ = -56 + Math.sin(nextAng) * 11;
+        ap.lookAt(nextX, ap.position.y, nextZ);
+        ap.rotateZ(-0.24);
+      });
+
+      if (ferrisWheelHub) {
+        ferrisWheelHub.rotation.z = elapsed * 0.22;
+        ferrisCabins.forEach(cab => {
+          cab.mesh.rotation.z = -ferrisWheelHub.rotation.z;
+        });
+      }
+
+      // 5. Realistic Multi-Stage Fireworks Animation (Launch -> Chrysanthemum Burst -> Gravity Willow Fall)
+      if (fireworksActive && fireworksGroup) {
+        fireworksGroup.children.forEach(shell => {
+          const { cfg, rocket, rocketMat, burstRays, rayMat, tipPoints, tipMat, dirs } = shell.userData;
+          const cycle = (elapsed * cfg.speed + cfg.phase) % 1;
+
+          if (cycle < 0.22) {
+            // Stage 1: Rocket ascending from ground to burst altitude
+            const launchT = cycle / 0.22;
+            const easeOut = 1 - Math.pow(1 - launchT, 2);
+            rocket.visible = true;
+            burstRays.visible = false;
+            tipPoints.visible = false;
+            rocket.position.set(0, -14 * (1 - easeOut), 0);
+            rocketMat.opacity = 1.0 - launchT * 0.3;
+          } else {
+            // Stage 2: Radial spherical burst + gentle gravity droop + twinkling fade
+            const burstT = (cycle - 0.22) / 0.78;
+            const expand = (1 - Math.pow(1 - burstT, 2.4)) * cfg.radius;
+            const droop = burstT * burstT * 2.6;
+            const alpha = Math.max(0, 1 - Math.pow(burstT, 1.65));
+
+            rocket.visible = false;
+            burstRays.visible = true;
+            tipPoints.visible = true;
+
+            const rPos = burstRays.geometry.attributes.position.array;
+            const tPos = tipPoints.geometry.attributes.position.array;
+            const tailRatio = Math.max(0.45, 0.84 - burstT * 0.25);
+
+            for (let i = 0; i < dirs.length; i++) {
+              const d = dirs[i];
+              const tipX = d.x * expand;
+              const tipY = d.y * expand - droop;
+              const tipZ = d.z * expand;
+
+              const tailX = d.x * expand * tailRatio;
+              const tailY = d.y * expand * tailRatio - droop * 0.65;
+              const tailZ = d.z * expand * tailRatio;
+
+              rPos[i * 6] = tailX;
+              rPos[i * 6 + 1] = tailY;
+              rPos[i * 6 + 2] = tailZ;
+              rPos[i * 6 + 3] = tipX;
+              rPos[i * 6 + 4] = tipY;
+              rPos[i * 6 + 5] = tipZ;
+
+              tPos[i * 3] = tipX;
+              tPos[i * 3 + 1] = tipY;
+              tPos[i * 3 + 2] = tipZ;
+            }
+            burstRays.geometry.attributes.position.needsUpdate = true;
+            tipPoints.geometry.attributes.position.needsUpdate = true;
+
+            rayMat.opacity = alpha * 0.9;
+            tipMat.opacity = alpha * (0.75 + 0.25 * Math.sin(elapsed * 28 + cfg.phase * 10));
+          }
+        });
+      }
+
+      updateHotspotPositions();
+      renderer.render(scene, camera);
+    }
+
+    window.onload = function () {
+      init3DScene();
+      selectTrainingModule(0, false);
+      selectPersona(0);
+      updateROICalculator();
+      renderQuizUI();
+      buildBottomWaypoints();
+      animate();
+    };
+  </script>
+</body>
+</html>
