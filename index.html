@@ -209,8 +209,9 @@
         <!-- Mangrove North -->
         <path d="M -110,-85 L 110,-85 L 110,-12 L 30,-11 L 26,-16 L 1,-11 L -22,-10 L -46,-7 L -110,-2 Z" fill="#14532d" opacity="0.85" />
         <!-- Regional Connectors -->
-        <line x1="-8" y1="-75" x2="-9.5" y2="-5.2" stroke="#38bdf8" stroke-width="1.4" stroke-dasharray="3,2" />
-        <line x1="-60" y1="-44" x2="-39" y2="-7" stroke="#94a3b8" stroke-width="1.6" />
+        <line x1="-8" y1="-75" x2="-9.5" y2="-5.2" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="3,2" />
+        <line x1="-60" y1="-44" x2="-39" y2="-7" stroke="#94a3b8" stroke-width="1.8" />
+        <path d="M -98,-26 Q -55,-34 -18,-36 T 72,-54" fill="none" stroke="#f472b6" stroke-width="1.8" stroke-dasharray="4,2" />
         <line x1="48.5" y1="21.8" x2="80" y2="47" stroke="#f59e0b" stroke-width="1.8" />
         <!-- Khu A (Vịnh Tiên - Yellow) -->
         <polygon id="minimap-khu-a" onclick="flyToZone('khuA')" points="-45,-6 -34,-8 -22,-9 -11,-7 -8,-1 -15,3 -22,3 -25,6 -37,5 -44,-2" fill="#eab308" fill-opacity="0.35" stroke="#facc15" stroke-width="1.5" class="cursor-pointer hover:fill-opacity-60 transition" />
@@ -227,6 +228,8 @@
         <text x="34" y="13" fill="#fde68a" font-size="6.5" font-weight="bold" text-anchor="middle" pointer-events="none">KHU C (318ha)</text>
         <text x="-8" y="-65" fill="#7dd3fc" font-size="5.5" font-weight="bold" text-anchor="middle">▲ Q1 / Bến Thành (12')</text>
         <text x="-66" y="-48" fill="#cbd5e1" font-size="5.2" font-weight="bold" text-anchor="middle">↖ Cầu Cần Giờ (Q7)</text>
+        <text x="-82" y="-18" fill="#f9a8d4" font-size="5.0" font-weight="bold" text-anchor="middle">◀ Cao tốc Miền Tây</text>
+        <text x="66" y="-60" fill="#6ee7b7" font-size="5.2" font-weight="bold" text-anchor="middle">↗ Sân bay Long Thành</text>
         <text x="74" y="55" fill="#fcd34d" font-size="5.5" font-weight="bold" text-anchor="middle">↘ Cầu Vượt Biển Vũng Tàu</text>
         <!-- Live Camera Indicator Dot -->
         <circle id="minimap-cam-dot" cx="0" cy="2" r="3.2" fill="#ef4444" stroke="#ffffff" stroke-width="1" />
@@ -455,6 +458,7 @@
 
     const movingVehicles = [];
     const movingYachts = [];
+    const movingAirplanes = [];
     const lampBulbs = [];
     const nightPointLights = [];
     const hotspotElements = {};
@@ -1520,910 +1524,664 @@
     // 6. HIGH-SPEED METRO (350 KM/H), CABLE-STAYED SEA BRIDGES & REGIONAL HUBS
     // =========================================================================
     function buildInfrastructureAndFixedMetro() {
-      // 1. Box-Girder Viaduct Metro Line from District 1 (North) to Central Station (-9.5, -5.2)
+      // 1. Twin-Track Box-Girder Viaduct Metro Line from District 1 (North) to Central Station (-9.5, -5.2)
       metroCurve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(-8.0, 2.6, -78.0),
-        new THREE.Vector3(-8.2, 2.6, -52.0),
-        new THREE.Vector3(-9.0, 2.6, -28.0),
-        new THREE.Vector3(-9.5, 2.6, -5.2),
-        new THREE.Vector3(-14.0, 2.6, -16.0),
-        new THREE.Vector3(-12.0, 2.6, -45.0),
-        new THREE.Vector3(-8.0, 2.6, -78.0)
+        new THREE.Vector3(-8.0, 2.75, -78.0),
+        new THREE.Vector3(-8.2, 2.75, -52.0),
+        new THREE.Vector3(-9.0, 2.75, -28.0),
+        new THREE.Vector3(-9.5, 2.75, -5.2),
+        new THREE.Vector3(-14.0, 2.75, -16.0),
+        new THREE.Vector3(-12.0, 2.75, -45.0),
+        new THREE.Vector3(-8.0, 2.75, -78.0)
       ], true);
 
-      const viaductMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.6 });
-      const viaductBeam = new THREE.Mesh(new THREE.TubeGeometry(metroCurve, 180, 0.42, 6, true), viaductMat);
-      viaductBeam.scale.y = 0.45;
-      layerGroups.traffic.add(viaductBeam);
-
-      // Viaduct Pillars + Twin Steel Rails & Sleepers
       const totalLen = metroCurve.getLength();
-      const pillarCount = 46;
-      const pillarInst = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.24, 0.34, 2.55, 8), viaductMat, pillarCount);
+      const viaductMat = new THREE.MeshStandardMaterial({ color: 0xdbeafe, roughness: 0.5, metalness: 0.1 });
+      const barrierMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35 });
+      const railSteelMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.85, roughness: 0.25 });
+      const sleeperMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
+
+      // Segmented Box-Girder Viaduct with Acoustic Barriers, Twin Tracks & Sleepers
+      const vSegments = 220;
+      const sleeperInst = new THREE.InstancedMesh(new THREE.BoxGeometry(0.96, 0.05, 0.14), sleeperMat, vSegments * 2);
       const dummy = new THREE.Object3D();
+      let sIdx = 0;
+
+      for (let i = 0; i < vSegments; i++) {
+        const u1 = i / vSegments;
+        const u2 = (i + 1) / vSegments;
+        const pt1 = metroCurve.getPointAt(u1);
+        const pt2 = metroCurve.getPointAt(u2);
+        const midPt = new THREE.Vector3().lerpVectors(pt1, pt2, 0.5);
+        const segLen = pt1.distanceTo(pt2) * 1.03;
+
+        const seg = new THREE.Group();
+        seg.position.copy(midPt);
+        seg.lookAt(pt2);
+
+        // Box girder & upper deck slab
+        const girder = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, segLen), viaductMat);
+        girder.position.y = -0.14;
+        const deck = new THREE.Mesh(new THREE.BoxGeometry(1.26, 0.12, segLen), viaductMat);
+        deck.position.y = 0.06;
+
+        // Left & right sound-proof parapet walls with blue accent strip
+        const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.24, segLen), barrierMat);
+        wallL.position.set(-0.58, 0.22, 0);
+        const wallR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.24, segLen), barrierMat);
+        wallR.position.set(0.58, 0.22, 0);
+
+        // Twin steel running rails (Left & Right tracks)
+        [-0.3, -0.14, 0.14, 0.3].forEach(rx => {
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.04, segLen), railSteelMat);
+          rail.position.set(rx, 0.15, 0);
+          seg.add(rail);
+        });
+
+        seg.add(girder, deck, wallL, wallR);
+        layerGroups.traffic.add(seg);
+
+        // Concrete sleepers
+        for (let k = 0; k < 2; k++) {
+          const su = u1 + (k * 0.5) / vSegments;
+          const sPt = metroCurve.getPointAt(su);
+          const sTan = metroCurve.getTangentAt(su);
+          dummy.position.set(sPt.x, sPt.y + 0.12, sPt.z);
+          dummy.lookAt(sPt.x + sTan.x, sPt.y + 0.12, sPt.z + sTan.z);
+          dummy.scale.set(1, 1, 1);
+          dummy.updateMatrix();
+          sleeperInst.setMatrixAt(sIdx++, dummy.matrix);
+        }
+      }
+      sleeperInst.count = sIdx;
+      layerGroups.traffic.add(sleeperInst);
+
+      // Y-Shaped Architectural Viaduct Pillars + Overhead Catenary Gantries
+      const pillarCount = 52;
+      const pillarInst = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.28, 0.42, 2.55, 8), viaductMat, pillarCount);
+      const capInst = new THREE.InstancedMesh(new THREE.BoxGeometry(1.15, 0.26, 0.45), viaductMat, pillarCount);
       for (let i = 0; i < pillarCount; i++) {
-        const pt = metroCurve.getPointAt(i / pillarCount);
-        dummy.position.set(pt.x, 1.28, pt.z);
+        const u = i / pillarCount;
+        const pt = metroCurve.getPointAt(u);
+        const tan = metroCurve.getTangentAt(u);
+
+        dummy.position.set(pt.x, 1.25, pt.z);
         dummy.rotation.set(0, 0, 0);
         dummy.scale.set(1, 1, 1);
         dummy.updateMatrix();
         pillarInst.setMatrixAt(i, dummy.matrix);
-      }
-      layerGroups.traffic.add(pillarInst);
 
-      // Central Metro Station Canopy
+        dummy.position.set(pt.x, 2.48, pt.z);
+        dummy.lookAt(pt.x + tan.x, 2.48, pt.z + tan.z);
+        dummy.updateMatrix();
+        capInst.setMatrixAt(i, dummy.matrix);
+
+        // Overhead Catenary Arch every 3rd pillar
+        if (i % 3 === 0) {
+          const gantry = new THREE.Group();
+          gantry.position.set(pt.x, 2.75, pt.z);
+          gantry.lookAt(pt.x + tan.x, 2.75, pt.z + tan.z);
+          const mastL = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.95, 6), railSteelMat);
+          mastL.position.set(-0.56, 0.48, 0);
+          const mastR = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.95, 6), railSteelMat);
+          mastR.position.set(0.56, 0.48, 0);
+          const crossWire = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.03, 0.03), railSteelMat);
+          crossWire.position.set(0, 0.92, 0);
+          gantry.add(mastL, mastR, crossWire);
+          layerGroups.traffic.add(gantry);
+        }
+      }
+      layerGroups.traffic.add(pillarInst, capInst);
+
+      // Grand Central Metro Station Hub (-9.5, -5.2) with Multi-Ribbed Glass Canopy & Concourse
       const stationGroup = new THREE.Group();
-      stationGroup.position.set(-9.5, 2.6, -5.2);
-      const stRoof = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.8, 0.85, 16, 1, false, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0x0ea5e9, emissive: 0x0284c7, emissiveIntensity: 0.35 }));
-      stRoof.rotation.z = Math.PI / 2;
-      stRoof.scale.set(1, 1, 2.4);
-      stRoof.position.y = 0.65;
-      stationGroup.add(stRoof);
+      stationGroup.position.set(-9.5, 0.58, -5.2);
+      const stBase = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.15, 4.4), new THREE.MeshStandardMaterial({ map: archTextures.facade, color: 0xf8fafc, roughness: 0.25 }));
+      stBase.position.y = 1.08;
+      const stGlassCanopy = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.65, 1.85, 4.6, 20, 1, false, 0, Math.PI),
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.6, transparent: true, opacity: 0.88 })
+      );
+      stGlassCanopy.rotation.z = Math.PI / 2;
+      stGlassCanopy.rotation.y = Math.PI / 2;
+      stGlassCanopy.position.y = 2.25;
+      stationGroup.add(stBase, stGlassCanopy);
+
+      for (let r = -2; r <= 2; r++) {
+        const rib = new THREE.Mesh(new THREE.TorusGeometry(1.78, 0.05, 6, 24, Math.PI), new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.8 }));
+        rib.position.set(0, 2.25, r * 1.05);
+        stationGroup.add(rib);
+      }
       layerGroups.traffic.add(stationGroup);
 
-      // 5-Car Aerodynamic High-Speed Train (Aligned strictly along +Z with arc-length spacing)
-      const carSpacing = 1.68;
+      // 5-Car Bullet High-Speed Train (350 km/h) with Streamlined Nose, Pantographs & Headlights
+      const carSpacing = 1.72;
       metroArcStep = carSpacing / totalLen;
       trainCars = [];
       for (let c = 0; c < 5; c++) {
         const car = new THREE.Group();
         const body = new THREE.Mesh(
-          new THREE.BoxGeometry(0.56, 0.52, 1.52),
-          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.4 })
+          new THREE.BoxGeometry(0.58, 0.54, 1.54),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.18, metalness: 0.35 })
         );
-        body.position.y = 0.44;
-        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.59, 0.12, 1.54), new THREE.MeshBasicMaterial({ color: 0x0ea5e9 }));
-        stripe.position.y = 0.38;
-        const winGlow = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.14, 1.32), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
-        winGlow.position.y = 0.52;
-        car.add(body, stripe, winGlow);
+        body.position.set(0.22, 0.44, 0);
 
+        const aeroRoof = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.29, 1.54, 12, 1, false, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.2 }));
+        aeroRoof.rotation.z = Math.PI / 2;
+        aeroRoof.rotation.y = Math.PI / 2;
+        aeroRoof.position.set(0.22, 0.71, 0);
+
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.61, 0.11, 1.56), new THREE.MeshBasicMaterial({ color: 0x0284c7 }));
+        stripe.position.set(0.22, 0.36, 0);
+
+        const winGlow = new THREE.Mesh(new THREE.BoxGeometry(0.60, 0.14, 1.34), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        winGlow.position.set(0.22, 0.54, 0);
+
+        car.add(body, aeroRoof, stripe, winGlow);
+
+        // Pantograph on cars 1 and 3
+        if (c === 1 || c === 3) {
+          const panto = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.18, 0.22), railSteelMat);
+          panto.position.set(0.22, 0.88, 0);
+          car.add(panto);
+        }
+
+        // Streamlined Shinkansen-style nose & glowing LED headlights on front/rear cars
         if (c === 0 || c === 4) {
-          const nose = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.65, 12), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.15 }));
-          nose.rotation.x = c === 0 ? Math.PI / 2 : -Math.PI / 2;
-          nose.position.set(0, 0.4, c === 0 ? 1.05 : -1.05);
-          car.add(nose);
+          const dirZ = c === 0 ? 1 : -1;
+          const nose = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.85, 16), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.12, metalness: 0.5 }));
+          nose.rotation.x = dirZ * (Math.PI / 2);
+          nose.scale.set(0.88, 1, 0.78);
+          nose.position.set(0.22, 0.44, dirZ * 1.15);
+
+          const cockpitGlass = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 8), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 }));
+          cockpitGlass.position.set(0.22, 0.58, dirZ * 0.82);
+
+          const headLight = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.07, 0.08), new THREE.MeshBasicMaterial({ color: c === 0 ? 0xffffff : 0xef4444 }));
+          headLight.position.set(0.22, 0.36, dirZ * 1.48);
+
+          car.add(nose, cockpitGlass, headLight);
         }
         layerGroups.traffic.add(car);
         trainCars.push(car);
       }
 
       // 2. Cable-Stayed A-Frame Sea Bridges (Cần Giờ Bridge NW & Cần Giờ - Vũng Tàu Sea Bridge SE)
-      const buildCableStayedBridge = (pStart, pEnd, pylonRatio, archHeight) => {
+      const buildCableStayedBridge = (pStart, pEnd, pylonRatios, archHeight, isGrandSeaBridge = false) => {
         const bridgeGroup = new THREE.Group();
-        const mid = new THREE.Vector3().lerpVectors(pStart, pEnd, 0.5);
-        mid.y = archHeight;
-        const curve = new THREE.CatmullRomCurve3([pStart, mid, pEnd]);
+        const spanVec = new THREE.Vector3().subVectors(pEnd, pStart);
+        const totalDist = spanVec.length();
+        const midPoint = new THREE.Vector3().lerpVectors(pStart, pEnd, 0.5);
+        midPoint.y += archHeight;
 
-        // Build flat, multi-lane bridge deck using segmented rectangular girders (prevents TubeGeometry twist)
-        const segments = 64;
-        const deckMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.72, metalness: 0.15 });
-        const railMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.4 });
-        const laneMarkMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
-        const pierMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.65 });
+        const bridgeCurve = new THREE.QuadraticBezierCurve3(pStart, midPoint, pEnd);
+        const segs = isGrandSeaBridge ? 68 : 44;
+        const deckW = isGrandSeaBridge ? 1.45 : 1.1;
 
-        for (let i = 0; i < segments; i++) {
-          const u1 = i / segments;
-          const u2 = (i + 1) / segments;
-          const pt1 = curve.getPointAt(u1);
-          const pt2 = curve.getPointAt(u2);
-          const midPt = new THREE.Vector3().lerpVectors(pt1, pt2, 0.5);
+        const deckMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.72 });
+        const railMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35 });
+        const stripeMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+        const towerMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.45, roughness: 0.3 });
+        const cableMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
+
+        for (let i = 0; i < segs; i++) {
+          const pt1 = bridgeCurve.getPointAt(i / segs);
+          const pt2 = bridgeCurve.getPointAt((i + 1) / segs);
+          const segMid = new THREE.Vector3().lerpVectors(pt1, pt2, 0.5);
           const segLen = pt1.distanceTo(pt2) * 1.03;
 
-          const segGroup = new THREE.Group();
-          segGroup.position.copy(midPt);
-          segGroup.lookAt(pt2);
+          const seg = new THREE.Group();
+          seg.position.copy(segMid);
+          seg.lookAt(pt2);
 
-          // Main flat asphalt roadway
-          const roadSlab = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.22, segLen), deckMat);
-          segGroup.add(roadSlab);
+          const slab = new THREE.Mesh(new THREE.BoxGeometry(deckW, 0.22, segLen), deckMat);
+          const railL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, segLen), railMat);
+          railL.position.set(-deckW * 0.48, 0.16, 0);
+          const railR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, segLen), railMat);
+          railR.position.set(deckW * 0.48, 0.16, 0);
+          seg.add(slab, railL, railR);
 
-          // Left & right safety guardrails
-          const railL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.18, segLen), railMat);
-          railL.position.set(-0.68, 0.16, 0);
-          const railR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.18, segLen), railMat);
-          railR.position.set(0.68, 0.16, 0);
-          segGroup.add(railL, railR);
-
-          // Center yellow divider line
-          if (i % 2 === 0) {
-            const divider = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.03, segLen * 0.75), laneMarkMat);
-            divider.position.set(0, 0.12, 0);
-            segGroup.add(divider);
+          if (isGrandSeaBridge) {
+            const walkway = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.04, segLen), new THREE.MeshStandardMaterial({ color: 0x0284c7 }));
+            walkway.position.set(deckW * 0.34, 0.12, 0);
+            seg.add(walkway);
           }
 
-          bridgeGroup.add(segGroup);
+          if (i % 2 === 0) {
+            const dash = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, segLen * 0.65), stripeMat);
+            dash.position.set(0, 0.12, 0);
+            seg.add(dash);
+          }
+          bridgeGroup.add(seg);
 
-          // Concrete support piers descending cleanly into water/ground
-          if (i > 2 && i < segments - 2 && i % 6 === 0 && Math.abs(u1 - pylonRatio) > 0.08) {
-            const pierH = midPt.y + 0.4;
-            const pier = new THREE.Mesh(new THREE.BoxGeometry(0.95, pierH, 0.36), pierMat);
-            pier.position.set(midPt.x, midPt.y - pierH / 2 - 0.05, midPt.z);
+          if (i > 1 && i < segs - 1 && i % 5 === 0) {
+            const pierH = segMid.y + 0.1;
+            const pier = new THREE.Mesh(new THREE.BoxGeometry(deckW * 0.68, pierH, 0.32), towerMat);
+            pier.position.set(segMid.x, segMid.y - pierH / 2, segMid.z);
             pier.lookAt(pt2.x, pier.position.y, pt2.z);
             bridgeGroup.add(pier);
           }
         }
 
-        // A-Frame Cable-Stayed Pylon Tower
-        const pylonPos = curve.getPointAt(pylonRatio);
-        const tangent = curve.getTangentAt(pylonRatio).normalize();
-        const perp = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
-        const yawAngle = Math.atan2(tangent.x, tangent.z);
+        // A-Frame Cable-Stayed Pylons & Stay Cables
+        pylonRatios.forEach(ratio => {
+          const pBase = bridgeCurve.getPointAt(ratio);
+          const pNext = bridgeCurve.getPointAt(Math.min(0.99, ratio + 0.01));
+          const tan = new THREE.Vector3().subVectors(pNext, pBase).normalize();
+          const perp = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
 
-        const pylonGroup = new THREE.Group();
-        pylonGroup.position.set(pylonPos.x, 0, pylonPos.z);
-        pylonGroup.rotation.y = yawAngle;
+          const pylonH = isGrandSeaBridge ? 7.6 : 5.4;
+          const pylonTop = new THREE.Vector3(pBase.x, pBase.y + pylonH, pBase.z);
 
-        const towerMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.45, roughness: 0.28 });
-        const totalTowerH = archHeight + 7.2;
+          const baseCap = new THREE.Mesh(new THREE.BoxGeometry(deckW * 1.45, 0.45, 1.3), towerMat);
+          baseCap.position.set(pBase.x, 0.25, pBase.z);
+          baseCap.lookAt(pNext.x, 0.25, pNext.z);
+          bridgeGroup.add(baseCap);
 
-        // Foundation pile cap at water level
-        const baseCap = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.65, 1.3), pierMat);
-        baseCap.position.y = 0.25;
-        pylonGroup.add(baseCap);
+          [-1, 1].forEach(side => {
+            const legStart = new THREE.Vector3(pBase.x + perp.x * side * (deckW * 0.56), 0.3, pBase.z + perp.z * side * (deckW * 0.56));
+            const legEnd = new THREE.Vector3(pylonTop.x + perp.x * side * 0.14, pylonTop.y, pylonTop.z + perp.z * side * 0.14);
+            const legLen = legStart.distanceTo(legEnd);
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.24, legLen, 0.32), towerMat);
+            leg.position.lerpVectors(legStart, legEnd, 0.5);
+            leg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3().subVectors(legEnd, legStart).normalize());
+            bridgeGroup.add(leg);
+          });
 
-        // Two inward-leaning A-frame legs
-        const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.3, totalTowerH, 8), towerMat);
-        legL.position.set(-0.55, totalTowerH / 2, 0);
-        legL.rotation.z = -0.065;
+          const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfbbf24 }));
+          beacon.position.copy(pylonTop).add(new THREE.Vector3(0, 0.18, 0));
+          bridgeGroup.add(beacon);
 
-        const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.3, totalTowerH, 8), towerMat);
-        legR.position.set(0.55, totalTowerH / 2, 0);
-        legR.rotation.z = 0.065;
-
-        // Horizontal crossbeams
-        const beamLow = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.28, 0.36), towerMat);
-        beamLow.position.y = pylonPos.y - 0.22;
-        const beamHigh = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.28, 0.32), towerMat);
-        beamHigh.position.y = archHeight + 3.6;
-
-        // Aviation warning beacon at spire tip
-        const topBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 10), new THREE.MeshBasicMaterial({ color: 0xfbbf24 }));
-        topBeacon.position.y = totalTowerH + 0.15;
-
-        pylonGroup.add(legL, legR, beamLow, beamHigh, topBeacon);
-        bridgeGroup.add(pylonGroup);
-
-        // Multi-strand Stay Cables anchored symmetrically on both sides of the flat deck
-        const cableMat = new THREE.LineBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.85 });
-        for (let k = -6; k <= 6; k++) {
-          if (k === 0) continue;
-          const u = Math.max(0.05, Math.min(0.95, pylonRatio + k * 0.058));
-          const deckPt = curve.getPointAt(u);
-          const anchorY = totalTowerH - 0.5 - Math.abs(k) * 0.34;
-          const topSpread = 0.18 + Math.abs(k) * 0.015;
-
-          const geo1 = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(pylonPos.x + perp.x * topSpread, anchorY, pylonPos.z + perp.z * topSpread),
-            new THREE.Vector3(deckPt.x + perp.x * 0.62, deckPt.y + 0.1, deckPt.z + perp.z * 0.62)
-          ]);
-          const geo2 = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(pylonPos.x - perp.x * topSpread, anchorY, pylonPos.z - perp.z * topSpread),
-            new THREE.Vector3(deckPt.x - perp.x * 0.62, deckPt.y + 0.1, deckPt.z - perp.z * 0.62)
-          ]);
-          bridgeGroup.add(new THREE.Line(geo1, cableMat), new THREE.Line(geo2, cableMat));
-        }
-        layerGroups.traffic.add(bridgeGroup);
-      };
-
-      // Cầu Cần Giờ (NW connecting Nhà Bè / Q7)
-      buildCableStayedBridge(new THREE.Vector3(-60, 0.65, -44), new THREE.Vector3(-39, 0.65, -7.2), 0.5, 3.8);
-      // Cầu Vượt Biển Cần Giờ – Vũng Tàu (SE from Mũi Danh Vọng)
-      buildCableStayedBridge(new THREE.Vector3(48.5, 0.65, 21.8), new THREE.Vector3(80, 0.65, 48), 0.48, 4.6);
-
-      // Internal Inter-Zone Flat Arch Bridges (Khu A <-> Khu D & Khu B <-> Khu C)
-      const buildInternalArchBridge = (p1, p2) => {
-        const mid = new THREE.Vector3().lerpVectors(p1, p2, 0.5);
-        mid.y = 1.45;
-        const bCurve = new THREE.CatmullRomCurve3([p1, mid, p2]);
-        const segs = 18;
-        const bMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 });
-        const roadMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7 });
-        for (let i = 0; i < segs; i++) {
-          const pt1 = bCurve.getPointAt(i / segs);
-          const pt2 = bCurve.getPointAt((i + 1) / segs);
-          const mPt = new THREE.Vector3().lerpVectors(pt1, pt2, 0.5);
-          const len = pt1.distanceTo(pt2) * 1.04;
-          const g = new THREE.Group();
-          g.position.copy(mPt);
-          g.lookAt(pt2);
-          const deck = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.14, len), roadMat);
-          const rL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.14, len), bMat);
-          rL.position.set(-0.38, 0.1, 0);
-          const rR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.14, len), bMat);
-          rR.position.set(0.38, 0.1, 0);
-          g.add(deck, rL, rR);
-          layerGroups.traffic.add(g);
-        }
-      };
-      buildInternalArchBridge(new THREE.Vector3(-22.5, 0.65, 3.2), new THREE.Vector3(-21.5, 0.65, 8.0));
-      buildInternalArchBridge(new THREE.Vector3(21.5, 0.65, -2.5), new THREE.Vector3(22.0, 0.65, 0.2));
-
-      // 3. Regional Skylines Surrounding All 4 Directions (Q1, Q7, Vũng Tàu, Long Thành)
-      const buildRegionalCluster = (cx, cz, count, spread, maxH, hasLighthouse = false) => {
-        const grp = new THREE.Group();
-        const mat = new THREE.MeshStandardMaterial({ map: archTextures.facade, color: 0x94a3b8, roughness: 0.4 });
-        for (let i = 0; i < count; i++) {
-          const bx = cx + ((i * 19) % spread) - spread / 2;
-          const bz = cz + ((i * 29) % spread) - spread / 2;
-          const bh = 2.5 + (i % 5) * (maxH / 5);
-          const bMesh = new THREE.Mesh(new THREE.BoxGeometry(1.8, bh, 1.8), mat);
-          bMesh.position.set(bx, bh / 2, bz);
-          grp.add(bMesh);
-        }
-        if (hasLighthouse) {
-          const lh = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.65, 6.5, 12), new THREE.MeshStandardMaterial({ color: 0xffffff }));
-          lh.position.set(cx + 3, 3.25, cz + 2);
-          const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
-          beacon.position.set(cx + 3, 6.7, cz + 2);
-          grp.add(lh, beacon);
-        }
-        layerGroups.zones.add(grp);
-      };
-      buildRegionalCluster(-8, -74, 18, 22, 11, false);   // District 1 / Bến Thành Skyline
-      buildRegionalCluster(-64, -48, 12, 16, 7.5, false); // Nhà Bè / District 7 Skyline
-      buildRegionalCluster(84, 52, 14, 18, 8.0, true);    // TP. Vũng Tàu Peninsula + Lighthouse
-      buildRegionalCluster(70, -58, 10, 18, 6.0, false);  // Long Thành Airport & International Port
-
-      // 4. 100% Electric VinFast Vehicles Moving Along Boulevards
-      const evRoutes = [
-        new THREE.CatmullRomCurve3([new THREE.Vector3(-41, 0.72, -2.5), new THREE.Vector3(-25, 0.72, 1.8), new THREE.Vector3(-10, 0.72, -1.8), new THREE.Vector3(8, 0.72, -7.2), new THREE.Vector3(23, 0.72, -11.0)], false),
-        new THREE.CatmullRomCurve3([new THREE.Vector3(-20, 0.72, 12.0), new THREE.Vector3(-4, 0.72, 12.2), new THREE.Vector3(12, 0.72, 12.0)], false),
-        new THREE.CatmullRomCurve3([new THREE.Vector3(20, 0.72, 4.2), new THREE.Vector3(33, 0.72, 8.5), new THREE.Vector3(46, 0.72, 19.0)], false)
-      ];
-      evRoutes.forEach((er, rIdx) => {
-        for (let v = 0; v < 14; v++) {
-          const ev = new THREE.Mesh(
-            new THREE.BoxGeometry(0.24, 0.16, 0.46),
-            new THREE.MeshStandardMaterial({ color: v % 3 === 0 ? 0x10b981 : (v % 3 === 1 ? 0x38bdf8 : 0xf8fafc), emissive: 0x38bdf8, emissiveIntensity: 0.2 })
-          );
-          layerGroups.traffic.add(ev);
-          movingVehicles.push({ mesh: ev, curve: er, t: v / 14, speed: 0.0012 + (rIdx * 0.0002), dir: v % 2 === 0 ? 1 : -1 });
-        }
-      });
-    }
-
-    // =========================================================================
-    // 7. FIREWORKS, HOTSPOT PINS, CAMERA CONTROLS & LIGHTING MODES
-    // =========================================================================
-    function buildFireworks() {
-      fireworksGroup = new THREE.Group();
-      fireworksGroup.visible = false;
-      const fwColors = [0xfbbf24, 0x38bdf8, 0xf472b6, 0x34d399, 0xa78bfa];
-      const origins = [
-        new THREE.Vector3(47.2, 24.5, 20.2),
-        new THREE.Vector3(-10.8, 12.0, -2.4),
-        new THREE.Vector3(-41.5, 13.5, -4.5)
-      ];
-      origins.forEach((orig, oIdx) => {
-        const pts = [];
-        for (let i = 0; i < 90; i++) {
-          const u = Math.random();
-          const v = Math.random();
-          const theta = u * 2.0 * Math.PI;
-          const phi = Math.acos(2.0 * v - 1.0);
-          const r = 2.2 + Math.random() * 2.5;
-          pts.push(new THREE.Vector3(
-            orig.x + r * Math.sin(phi) * Math.cos(theta),
-            orig.y + r * Math.cos(phi),
-            orig.z + r * Math.sin(phi) * Math.sin(theta)
-          ));
-        }
-        const geo = new THREE.BufferGeometry().setFromPoints(pts);
-        const mat = new THREE.PointsMaterial({ color: fwColors[oIdx % fwColors.length], size: 0.42, transparent: true, opacity: 0.9 });
-        const sparkCloud = new THREE.Points(geo, mat);
-        sparkCloud.userData = { origin: orig, phase: oIdx * 2.1 };
-        fireworksGroup.add(sparkCloud);
-      });
-      scene.add(fireworksGroup);
-    }
-
-    function createHotspotDOMPins() {
-      const overlay = document.getElementById('hotspot-overlay');
-      overlay.innerHTML = '';
-      const badgeStyles = {
-        amber: 'border-amber-400/70 bg-slate-950/85 text-amber-200',
-        cyan: 'border-cyan-400/70 bg-slate-950/85 text-cyan-200',
-        emerald: 'border-emerald-400/70 bg-slate-950/85 text-emerald-200',
-        pink: 'border-pink-400/70 bg-slate-950/85 text-pink-200',
-        sky: 'border-sky-400/70 bg-slate-950/85 text-sky-200'
-      };
-      HOTSPOTS.forEach(hs => {
-        const el = document.createElement('div');
-        el.className = `hotspot-pin pointer-events-auto rounded-xl px-2.5 py-1 border shadow-lg backdrop-blur-md ${badgeStyles[hs.color] || badgeStyles.cyan}`;
-        el.innerHTML = `
-          <div class="text-[9px] font-extrabold tracking-wider opacity-80 uppercase">${hs.tag}</div>
-          <div class="text-[11px] font-bold text-white whitespace-nowrap">${hs.label}</div>
-        `;
-        el.onclick = () => {
-          droneTourActive = false;
-          updateDroneButtonUI();
-          applyCameraPreset(hs.cam);
-          if (typeof hs.mod === 'number') selectTrainingModule(hs.mod, false);
-        };
-        overlay.appendChild(el);
-        hotspotElements[hs.id] = el;
-      });
-    }
-
-    function updateHotspotPositions() {
-      const overlay = document.getElementById('hotspot-overlay');
-      if (!showHotspotPins) {
-        overlay.style.display = 'none';
-        return;
-      }
-      overlay.style.display = 'block';
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-
-      HOTSPOTS.forEach(hs => {
-        const el = hotspotElements[hs.id];
-        if (!el) return;
-        const dist = camera.position.distanceTo(hs.pos3D);
-        const proj = hs.pos3D.clone().project(camera);
-        if (proj.z > 1 || proj.x < -1.1 || proj.x > 1.1 || proj.y < -1.1 || proj.y > 1.1) {
-          el.style.opacity = '0';
-          el.style.pointerEvents = 'none';
-          return;
-        }
-        const sx = (proj.x * 0.5 + 0.5) * w;
-        const sy = (-proj.y * 0.5 + 0.5) * h;
-        const scale = Math.max(0.68, Math.min(1.05, 58 / Math.max(dist, 24)));
-        el.style.left = `${sx}px`;
-        el.style.top = `${sy}px`;
-        el.style.opacity = hs.isRegional && dist < 32 ? '0.35' : '1';
-        el.style.pointerEvents = 'auto';
-        el.style.transform = `translate(-50%, -100%) scale(${scale.toFixed(2)})`;
-      });
-    }
-
-    function setLightingMode(mode) {
-      currentLightMode = mode;
-      ['day', 'sunset', 'night'].forEach(m => {
-        const btn = document.getElementById(`btn-light-${m}`);
-        if (!btn) return;
-        btn.className = m === mode
-          ? 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-400 text-slate-950 transition'
-          : 'px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition';
-      });
-
-      const isNight = mode === 'night';
-      const isSunset = mode === 'sunset';
-
-      if (mode === 'day') {
-        scene.background = new THREE.Color(0x0b3954);
-        scene.fog = new THREE.FogExp2(0x0b3954, 0.0038);
-        sunLight.color.setHex(0xfffbeb);
-        sunLight.intensity = 0.92;
-        sunLight.position.set(45, 75, 35);
-        hemiLight.intensity = 0.72;
-        renderer.toneMappingExposure = 0.96;
-        if (waterUniforms) {
-          waterUniforms.uDeepColor.value.setHex(0x064e6e);
-          waterUniforms.uLagoonColor.value.setHex(0x0ea5e9);
-          waterUniforms.uSunIntensity.value = 0.65;
-        }
-      } else if (isSunset) {
-        scene.background = new THREE.Color(0x2a183b);
-        scene.fog = new THREE.FogExp2(0x2a183b, 0.0044);
-        sunLight.color.setHex(0xfb923c);
-        sunLight.intensity = 1.05;
-        sunLight.position.set(-65, 22, 40);
-        hemiLight.intensity = 0.55;
-        renderer.toneMappingExposure = 1.02;
-        if (waterUniforms) {
-          waterUniforms.uDeepColor.value.setHex(0x1e1b4b);
-          waterUniforms.uLagoonColor.value.setHex(0x0284c7);
-          waterUniforms.uSunIntensity.value = 0.95;
-        }
-      } else {
-        scene.background = new THREE.Color(0x040d1a);
-        scene.fog = new THREE.FogExp2(0x040d1a, 0.0048);
-        sunLight.color.setHex(0x38bdf8);
-        sunLight.intensity = 0.28;
-        sunLight.position.set(-30, 50, -30);
-        hemiLight.intensity = 0.34;
-        renderer.toneMappingExposure = 1.15;
-        if (waterUniforms) {
-          waterUniforms.uDeepColor.value.setHex(0x031527);
-          waterUniforms.uLagoonColor.value.setHex(0x0369a1);
-          waterUniforms.uSunIntensity.value = 0.35;
-        }
-      }
-
-      // Toggle Lit Windows, Street Lamps, Night PointLights & Fireworks
-      layerGroups.buildings.traverse(obj => {
-        if (obj.material && obj.material.userData && obj.material.userData.isLitBuilding) {
-          obj.material.emissiveIntensity = isNight ? 0.95 : (isSunset ? 0.45 : 0.0);
-        }
-      });
-      lampBulbs.forEach(mat => {
-        mat.color.setHex(isNight || isSunset ? 0xfef08a : 0x94a3b8);
-      });
-      nightPointLights.forEach(pl => {
-        pl.intensity = isNight ? pl.userData.maxIntensity : (isSunset ? pl.userData.maxIntensity * 0.45 : 0);
-      });
-      if (fireworksGroup) {
-        fireworksGroup.visible = isNight;
-        fireworksActive = isNight;
-      }
-    }
-
-    function applyCameraPreset(preset) {
-      camState.desiredTarget.set(preset.target[0], preset.target[1], preset.target[2]);
-      camState.desiredRadius = preset.radius;
-      camState.desiredTheta = preset.theta;
-      camState.desiredPhi = preset.phi;
-    }
-
-    function resetCameraOverview() {
-      droneTourActive = false;
-      updateDroneButtonUI();
-      applyCameraPreset(WAYPOINTS[0]);
-    }
-
-    function focusStreetView() {
-      droneTourActive = false;
-      updateDroneButtonUI();
-      applyCameraPreset({ target: [42, 1.8, 15], radius: 9.5, theta: 0.72, phi: 1.28 });
-    }
-
-    function toggleHotspotPins() {
-      showHotspotPins = !showHotspotPins;
-      const btn = document.getElementById('btn-toggle-pins');
-      if (btn) btn.textContent = showHotspotPins ? '📍 Nhãn 3D: Bật' : '📍 Nhãn 3D: Tắt';
-    }
-
-    function toggleDroneTour() {
-      droneTourActive = !droneTourActive;
-      updateDroneButtonUI();
-    }
-
-    function updateDroneButtonUI() {
-      const btn = document.getElementById('btn-drone-tour');
-      if (!btn) return;
-      btn.textContent = droneTourActive ? '⏹ Dừng Bay' : '🚁 Bay Tham Quan';
-    }
-
-    function toggleLayer(layerKey, visible) {
-      if (layerGroups[layerKey]) layerGroups[layerKey].visible = visible;
-    }
-
-    function flyToZone(zoneKey) {
-      droneTourActive = false;
-      updateDroneButtonUI();
-      const map = {
-        khuA: { target: [-26, 1.5, -2.5], radius: 28, theta: -0.2, phi: 0.65 },
-        khuB: { target: [10, 1.5, -8.5], radius: 28, theta: 0.2, phi: 0.65 },
-        khuC: { target: [35, 3.0, 12.0], radius: 28, theta: 0.55, phi: 0.66 },
-        khuD: { target: [-4, 1.2, 11.0], radius: 26, theta: 0.0, phi: 0.64 }
-      };
-      if (map[zoneKey]) applyCameraPreset(map[zoneKey]);
-    }
-
-    function setupCameraControls() {
-      const dom = renderer.domElement;
-      let isDragging = false;
-      let dragButton = 0;
-      let prevX = 0, prevY = 0;
-
-      dom.addEventListener('contextmenu', e => e.preventDefault());
-      dom.addEventListener('mousedown', e => {
-        isDragging = true;
-        dragButton = e.button;
-        prevX = e.clientX;
-        prevY = e.clientY;
-        droneTourActive = false;
-        updateDroneButtonUI();
-      });
-      window.addEventListener('mouseup', () => { isDragging = false; });
-      window.addEventListener('mousemove', e => {
-        if (!isDragging) return;
-        const dx = e.clientX - prevX;
-        const dy = e.clientY - prevY;
-        prevX = e.clientX;
-        prevY = e.clientY;
-
-        if (dragButton === 0) {
-          camState.desiredTheta -= dx * 0.0055;
-          camState.desiredPhi = Math.max(0.18, Math.min(1.42, camState.desiredPhi - dy * 0.0055));
-        } else {
-          const panSpeed = camState.radius * 0.0014;
-          const forward = new THREE.Vector3(-Math.sin(camState.theta), 0, -Math.cos(camState.theta));
-          const right = new THREE.Vector3(Math.cos(camState.theta), 0, -Math.sin(camState.theta));
-          camState.desiredTarget.addScaledVector(right, -dx * panSpeed);
-          camState.desiredTarget.addScaledVector(forward, dy * panSpeed);
-        }
-      });
-
-      dom.addEventListener('wheel', e => {
-        e.preventDefault();
-        droneTourActive = false;
-        updateDroneButtonUI();
-        camState.desiredRadius = Math.max(4.5, Math.min(115, camState.desiredRadius + e.deltaY * 0.035));
-      }, { passive: false });
-
-      // Touch Support
-      let lastTouchDist = 0;
-      dom.addEventListener('touchstart', e => {
-        droneTourActive = false;
-        updateDroneButtonUI();
-        if (e.touches.length === 1) {
-          isDragging = true;
-          prevX = e.touches[0].clientX;
-          prevY = e.touches[0].clientY;
-        } else if (e.touches.length === 2) {
-          lastTouchDist = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
-        }
-      }, { passive: true });
-
-      dom.addEventListener('touchmove', e => {
-        if (e.touches.length === 1 && isDragging) {
-          const dx = e.touches[0].clientX - prevX;
-          const dy = e.touches[0].clientY - prevY;
-          prevX = e.touches[0].clientX;
-          prevY = e.touches[0].clientY;
-          camState.desiredTheta -= dx * 0.006;
-          camState.desiredPhi = Math.max(0.18, Math.min(1.42, camState.desiredPhi - dy * 0.006));
-        } else if (e.touches.length === 2) {
-          const dist = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
-          camState.desiredRadius = Math.max(4.5, Math.min(115, camState.desiredRadius - (dist - lastTouchDist) * 0.08));
-          lastTouchDist = dist;
-        }
-      }, { passive: true });
-
-      dom.addEventListener('touchend', () => { isDragging = false; });
-
-      window.addEventListener('keydown', e => {
-        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
-        keyState[e.key.toLowerCase()] = true;
-      });
-      window.addEventListener('keyup', e => { keyState[e.key.toLowerCase()] = false; });
-    }
-
-    function init3DScene() {
-      const container = document.getElementById('canvas-container');
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0b3954);
-      scene.fog = new THREE.FogExp2(0x0b3954, 0.0038);
-
-      camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.2, 450);
-      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.96;
-      container.appendChild(renderer.domElement);
-
-      hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x0f293a, 0.72);
-      scene.add(hemiLight);
-
-      sunLight = new THREE.DirectionalLight(0xfffbeb, 0.92);
-      sunLight.position.set(45, 75, 35);
-      sunLight.castShadow = true;
-      sunLight.shadow.mapSize.width = 2048;
-      sunLight.shadow.mapSize.height = 2048;
-      sunLight.shadow.camera.near = 10;
-      sunLight.shadow.camera.far = 200;
-      const d = 65;
-      sunLight.shadow.camera.left = -d;
-      sunLight.shadow.camera.right = d;
-      sunLight.shadow.camera.top = d;
-      sunLight.shadow.camera.bottom = -d;
-      scene.add(sunLight);
-
-      // Night Architectural Accent PointLights
-      const addNightLight = (x, y, z, color, maxInt, dist) => {
-        const pl = new THREE.PointLight(color, 0, dist);
-        pl.position.set(x, y, z);
-        pl.userData = { maxIntensity: maxInt };
-        scene.add(pl);
-        nightPointLights.push(pl);
-      };
-      addNightLight(47.2, 14, 20.2, 0xfbbf24, 2.2, 32);
-      addNightLight(-10.8, 6, -2.4, 0x38bdf8, 1.8, 24);
-      addNightLight(-41.5, 7, -4.5, 0xf472b6, 1.8, 24);
-      addNightLight(3.5, 6, -9.8, 0x34d399, 1.4, 22);
-
-      Object.values(layerGroups).forEach(g => scene.add(g));
-
-      createArchitecturalTextures();
-      buildWaterAndMangroves();
-      buildZonesAndCanals();
-      buildIconicLandmarks();
-      buildInfrastructureAndFixedMetro();
-      buildFireworks();
-      createHotspotDOMPins();
-      setupCameraControls();
-
-      window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-    }
-
-    // =========================================================================
-    // 8. ACADEMY UI (5 MODULES, SALES PITCH / ROI, 10-QUESTION QUIZ & CERT)
-    // =========================================================================
-    let drawerOpen = true;
-    function toggleLeftDrawer() {
-      drawerOpen = !drawerOpen;
-      const drawer = document.getElementById('left-drawer');
-      const btn = document.getElementById('btn-toggle-drawer');
-      drawer.style.transform = drawerOpen ? 'translateX(0)' : 'translateX(-110%)';
-      btn.textContent = drawerOpen ? '◀ Thu gọn Học Viện' : '▶ Mở Học Viện Đào Tạo';
-    }
-
-    function switchDrawerTab(tab) {
-      ['modules', 'sales', 'quiz'].forEach(t => {
-        document.getElementById(`tab-panel-${t}`).classList.toggle('hidden', t !== tab);
-        const btn = document.getElementById(`tab-btn-${t}`);
-        btn.className = t === tab
-          ? 'py-2.5 text-cyan-300 border-b-2 border-cyan-400 bg-cyan-500/10'
-          : 'py-2.5 text-slate-400 hover:text-slate-200 transition';
-      });
-    }
-
-    function selectTrainingModule(idx, moveCam = true) {
-      activeModuleIndex = idx;
-      const mod = TRAINING_MODULES[idx];
-      const pillsEl = document.getElementById('module-pills');
-      pillsEl.innerHTML = TRAINING_MODULES.map((m, i) => `
-        <button onclick="selectTrainingModule(${i}, true)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${i === idx ? 'bg-cyan-400 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
-          Bài ${i + 1}
-        </button>
-      `).join('');
-
-      document.getElementById('module-detail-card').innerHTML = `
-        <div class="bg-slate-900/75 border border-cyan-500/30 rounded-xl p-3 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-cyan-500/20 text-cyan-300">${mod.badge}</span>
-            <button onclick="applyCameraPreset(TRAINING_MODULES[${idx}].cam)" class="text-[11px] font-bold text-amber-300 hover:underline">🎯 Bay tới góc nhìn 3D</button>
-          </div>
-          <h2 class="text-sm font-extrabold text-white leading-snug">${mod.title}</h2>
-          <p class="text-xs text-slate-300 leading-relaxed">${mod.summary}</p>
-          <div class="space-y-1.5 pt-1">
-            <div class="text-[11px] font-bold uppercase text-emerald-300">Điểm nhấn cốt lõi:</div>
-            ${mod.highlights.map(h => `<div class="text-xs text-slate-200 bg-slate-800/70 rounded-lg p-2 border border-slate-700/60 leading-relaxed">• ${h}</div>`).join('')}
-          </div>
-          <div class="bg-amber-500/15 border border-amber-400/40 rounded-lg p-2.5 text-xs text-amber-100">
-            <span class="font-extrabold text-amber-300">💡 Bí quyết chốt sale:</span> ${mod.pitchTip}
-          </div>
-        </div>
-      `;
-
-      if (moveCam && mod.cam) {
-        droneTourActive = false;
-        updateDroneButtonUI();
-        applyCameraPreset(mod.cam);
-      }
-    }
-
-    function selectPersona(idx) {
-      [0, 1, 2].forEach(i => {
-        const btn = document.getElementById(`persona-btn-${i}`);
-        btn.className = i === idx
-          ? 'py-1.5 px-2 rounded-lg text-[11px] font-bold bg-amber-500/20 text-amber-200 border border-amber-400/50'
-          : 'py-1.5 px-2 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700';
-      });
-      const p = PERSONA_SCRIPTS[idx];
-      document.getElementById('persona-content').innerHTML = `
-        <div class="font-bold text-white mb-1">${p.title}:</div>
-        ${p.points.map(pt => `<p>${pt}</p>`).join('')}
-      `;
-    }
-
-    function updateROICalculator() {
-      const cap = parseFloat(document.getElementById('roi-capital-slider').value);
-      const growth = parseFloat(document.getElementById('roi-growth-slider').value);
-      const profit = cap * (growth / 100);
-      const total = cap + profit;
-      document.getElementById('roi-capital-label').textContent = `${cap} Tỷ VNĐ`;
-      document.getElementById('roi-growth-label').textContent = `+${growth}%`;
-      document.getElementById('roi-profit-val').textContent = `+${profit.toFixed(2)} Tỷ VNĐ`;
-      document.getElementById('roi-total-val').textContent = `${total.toFixed(2)} Tỷ VNĐ`;
-    }
-
-    const userQuizAnswers = new Array(QUIZ_QUESTIONS.length).fill(null);
-    let quizSubmitted = false;
-
-    function renderQuizUI() {
-      const container = document.getElementById('quiz-container');
-      let score = 0;
-      if (quizSubmitted) {
-        QUIZ_QUESTIONS.forEach((q, i) => { if (userQuizAnswers[i] === q.ans) score++; });
-      }
-
-      let html = '';
-      if (quizSubmitted) {
-        const passed = score >= 8;
-        html += `
-          <div class="rounded-xl p-3 border ${passed ? 'bg-emerald-500/20 border-emerald-400' : 'bg-amber-500/20 border-amber-400'} space-y-2">
-            <div class="text-sm font-extrabold text-white">Kết quả sát hạch: ${score}/${QUIZ_QUESTIONS.length} điểm</div>
-            <p class="text-xs text-slate-200">${passed ? 'Chúc mừng! Bạn đã đạt chuẩn Chuyên Viên Tư Vấn Vinhomes Green Paradise Cần Giờ.' : 'Bạn cần đạt tối thiểu 8/10 điểm để nhận chứng nhận. Hãy ôn tập 5 chuyên đề và thử lại!'}</p>
-            ${passed ? `
-              <div class="bg-slate-950/90 border border-amber-400/60 rounded-xl p-3 text-center space-y-1.5">
-                <div class="text-[10px] font-bold tracking-widest text-amber-300 uppercase">Vinhomes Green Paradise Academy</div>
-                <div class="text-xs font-extrabold text-white uppercase">Chứng Nhận Chuyên Viên Tư Vấn</div>
-                <input type="text" placeholder="Nhập họ và tên của bạn..." class="w-full text-center text-xs font-bold bg-slate-900 border border-slate-700 rounded-lg py-1.5 px-2 text-cyan-300 focus:outline-none focus:border-amber-400" />
-                <div class="text-[10px] text-emerald-300">Đạt chuẩn kiến thức Quy hoạch 2.870 Ha & Mô hình ESG+ C++</div>
-              </div>
-            ` : ''}
-            <button onclick="resetQuiz()" class="w-full py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white">Làm lại bài sát hạch</button>
-          </div>
-        `;
-      }
-
-      html += QUIZ_QUESTIONS.map((item, qIdx) => `
-        <div class="bg-slate-900/75 border border-slate-700/70 rounded-xl p-2.5 space-y-1.5">
-          <div class="text-xs font-bold text-white">Câu ${qIdx + 1}: ${item.q}</div>
-          <div class="space-y-1">
-            ${item.options.map((opt, oIdx) => {
-              let cls = 'bg-slate-800/80 border-slate-700 text-slate-200 hover:bg-slate-700';
-              if (quizSubmitted) {
-                if (oIdx === item.ans) cls = 'bg-emerald-500/30 border-emerald-400 text-emerald-200 font-bold';
-                else if (userQuizAnswers[qIdx] === oIdx) cls = 'bg-rose-500/30 border-rose-400 text-rose-200';
-              } else if (userQuizAnswers[qIdx] === oIdx) {
-                cls = 'bg-cyan-500/30 border-cyan-400 text-cyan-200 font-bold';
+          const cablePairs = isGrandSeaBridge ? 7 : 5;
+          for (let c = 1; c <= cablePairs; c++) {
+            const offsetU = (c / (cablePairs + 1)) * (isGrandSeaBridge ? 0.18 : 0.22);
+            [-offsetU, offsetU].forEach(du => {
+              const cu = ratio + du;
+              if (cu > 0.04 && cu < 0.96) {
+                const deckPt = bridgeCurve.getPointAt(cu);
+                const anchorTop = new THREE.Vector3(pylonTop.x, pylonTop.y - c * 0.36, pylonTop.z);
+                [-1, 1].forEach(side => {
+                  const anchorDeck = new THREE.Vector3(deckPt.x + perp.x * side * (deckW * 0.45), deckPt.y + 0.1, deckPt.z + perp.z * side * (deckW * 0.45));
+                  const cLen = anchorTop.distanceTo(anchorDeck);
+                  const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, cLen, 4), cableMat);
+                  cable.position.lerpVectors(anchorTop, anchorDeck, 0.5);
+                  cable.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3().subVectors(anchorDeck, anchorTop).normalize());
+                  bridgeGroup.add(cable);
+                });
               }
-              return `<button onclick="selectQuizOption(${qIdx}, ${oIdx})" class="w-full text-left px-2.5 py-1.5 rounded-lg border text-[11px] transition ${cls}">${opt}</button>`;
-            }).join('')}
-          </div>
-        </div>
-      `).join('');
+            });
+          }
+        });
 
-      if (!quizSubmitted) {
-        html += `<button onclick="submitQuiz()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-500 text-slate-950 font-extrabold text-xs shadow-lg hover:opacity-95 transition">Nộp Bài & Nhận Chứng Nhận</button>`;
-      }
-      container.innerHTML = html;
-    }
+        layerGroups.traffic.add(bridgeGroup);
+        return bridgeCurve;
+      };
 
-    function selectQuizOption(qIdx, oIdx) {
-      if (quizSubmitted) return;
-      userQuizAnswers[qIdx] = oIdx;
-      renderQuizUI();
-    }
+      // Cầu Cần Giờ (NW Axis to Nhà Bè / Quận 7)
+      const canGioBridgeCurve = buildCableStayedBridge(new THREE.Vector3(-60.0, 0.72, -45.0), new THREE.Vector3(-39.0, 0.72, -7.2), [0.35, 0.65], 3.2, false);
+      // Cầu Vượt Biển Cần Giờ – Vũng Tàu (SE Axis)
+      const vungTauBridgeCurve = buildCableStayedBridge(new THREE.Vector3(48.5, 0.72, 21.8), new THREE.Vector3(80.0, 0.72, 48.0), [0.34, 0.66], 4.6, true);
+      // 2 Intra-Project Lagoon Arch Bridges (Khu A <-> Khu D & Khu B <-> Khu C)
+      buildCableStayedBridge(new THREE.Vector3(-22.0, 0.64, 3.2), new THREE.Vector3(-20.0, 0.64, 7.8), [0.5], 1.1, false);
+      buildCableStayedBridge(new THREE.Vector3(22.5, 0.64, -2.2), new THREE.Vector3(24.0, 0.64, 0.5), [0.5], 1.0, false);
 
-    function submitQuiz() {
-      quizSubmitted = true;
-      renderQuizUI();
-    }
+      // 3. Detailed Regional Gateways: Roads, Expressways, River Bridges & Landmark Icons
+      const buildRegionalHighway = (pts, width, hasMedian = true, pillarStep = 5) => {
+        const hwGroup = new THREE.Group();
+        const curve = new THREE.CatmullRomCurve3(pts);
+        const segs = 72;
+        const deckMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.72 });
+        const railMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 });
+        const stripeMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+        const pierMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.65 });
 
-    function resetQuiz() {
-      userQuizAnswers.fill(null);
-      quizSubmitted = false;
-      renderQuizUI();
-    }
+        for (let i = 0; i < segs; i++) {
+          const pt1 = curve.getPointAt(i / segs);
+          const pt2 = curve.getPointAt((i + 1) / segs);
+          const mid = new THREE.Vector3().lerpVectors(pt1, pt2, 0.5);
+          const len = pt1.distanceTo(pt2) * 1.03;
 
-    function buildBottomWaypoints() {
-      const bar = document.getElementById('bottom-waypoints');
-      bar.innerHTML = WAYPOINTS.map((wp, idx) => `
-        <button onclick="droneTourActive=false; updateDroneButtonUI(); applyCameraPreset(WAYPOINTS[${idx}]);" class="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-slate-800/90 hover:bg-cyan-500/30 text-slate-200 hover:text-white border border-slate-700/80 whitespace-nowrap transition">
-          ${wp.name}
-        </button>
-      `).join('');
-    }
+          const seg = new THREE.Group();
+          seg.position.copy(mid);
+          seg.lookAt(pt2);
 
-    // =========================================================================
-    // 9. MAIN ANIMATION LOOP
-    // =========================================================================
-    let trainProgress = 0.05;
-    const clock = new THREE.Clock();
+          const slab = new THREE.Mesh(new THREE.BoxGeometry(width, 0.2, len), deckMat);
+          const rL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, len), railMat);
+          rL.position.set(-width * 0.48, 0.15, 0);
+          const rR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, len), railMat);
+          rR.position.set(width * 0.48, 0.15, 0);
+          seg.add(slab, rL, rR);
 
-    function animate() {
-      requestAnimationFrame(animate);
-      const dt = Math.min(clock.getDelta(), 0.05);
-      const elapsed = clock.getElapsedTime();
+          if (hasMedian) {
+            const med = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, len), railMat);
+            med.position.set(0, 0.12, 0);
+            seg.add(med);
+          }
+          if (i % 2 === 0) {
+            [-width * 0.24, width * 0.24].forEach(lx => {
+              const dash = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, len * 0.68), stripeMat);
+              dash.position.set(lx, 0.11, 0);
+              seg.add(dash);
+            });
+          }
+          if (i % 4 === 0) {
+            const hBulbMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8 });
+            lampBulbs.push(hBulbMat);
+            [-width * 0.48, width * 0.48].forEach(sx => {
+              const hPole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.85, 5), new THREE.MeshStandardMaterial({ color: 0x475569 }));
+              hPole.position.set(sx, 0.55, 0);
+              const hBulb = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), hBulbMat);
+              hBulb.position.set(sx, 0.98, 0);
+              seg.add(hPole, hBulb);
+            });
+          }
+          hwGroup.add(seg);
 
-      if (waterUniforms) waterUniforms.uTime.value = elapsed;
+          if (i > 1 && i < segs - 1 && i % pillarStep === 0 && mid.y > 0.85) {
+            const pH = mid.y - 0.35;
+            const pier = new THREE.Mesh(new THREE.BoxGeometry(width * 0.75, pH, 0.4), pierMat);
+            pier.position.set(mid.x, mid.y - pH / 2 - 0.08, mid.z);
+            pier.lookAt(pt2.x, pier.position.y, pt2.z);
+            hwGroup.add(pier);
+          }
+        }
+        layerGroups.traffic.add(hwGroup);
+        return curve;
+      };
 
-      // Keyboard WASD / Arrow Navigation
-      const moveSpeed = camState.radius * 0.65 * dt;
-      const forward = new THREE.Vector3(-Math.sin(camState.theta), 0, -Math.cos(camState.theta));
-      const right = new THREE.Vector3(Math.cos(camState.theta), 0, -Math.sin(camState.theta));
-      if (keyState['w'] || keyState['arrowup']) camState.desiredTarget.addScaledVector(forward, moveSpeed);
-      if (keyState['s'] || keyState['arrowdown']) camState.desiredTarget.addScaledVector(forward, -moveSpeed);
-      if (keyState['a'] || keyState['arrowleft']) camState.desiredTarget.addScaledVector(right, -moveSpeed);
-      if (keyState['d'] || keyState['arrowright']) camState.desiredTarget.addScaledVector(right, moveSpeed);
+      // A. Expressway Network: Miền Tây (ĐBSCL) -> Bến Lức - Long Thành -> Sân Bay Quốc Tế Long Thành & Nhánh Nối Cần Giờ
+      const westToEastExpressway = buildRegionalHighway([
+        new THREE.Vector3(-108, 1.5, -24),
+        new THREE.Vector3(-76, 1.5, -31),
+        new THREE.Vector3(-42, 1.6, -34),
+        new THREE.Vector3(-8, 1.6, -36),
+        new THREE.Vector3(32, 1.5, -45),
+        new THREE.Vector3(70, 1.4, -56)
+      ], 1.55, true, 5);
 
-      if (droneTourActive) {
-        droneAngle += dt * 0.22;
-        camState.desiredTarget.set(Math.cos(droneAngle) * 12, 2.0, Math.sin(droneAngle) * 6);
-        camState.desiredTheta = droneAngle * 0.85;
-        camState.desiredRadius = 46 + Math.sin(droneAngle * 2) * 8;
-        camState.desiredPhi = 0.66;
-      }
+      // B. Trục Nguyễn Hữu Thọ / Rừng Sác nối Quận 1 -> Quận 7 -> Cầu Cần Giờ
+      const q1ToQ7Road = buildRegionalHighway([
+        new THREE.Vector3(-8, 0.72, -74),
+        new THREE.Vector3(-36, 0.72, -62),
+        new THREE.Vector3(-62, 0.72, -48)
+      ], 1.35, true, 99);
 
-      // Smooth Camera Damping
-      camState.target.lerp(camState.desiredTarget, 0.1);
-      camState.radius += (camState.desiredRadius - camState.radius) * 0.1;
-      camState.theta += (camState.desiredTheta - camState.theta) * 0.1;
-      camState.phi += (camState.desiredPhi - camState.phi) * 0.1;
+      // C. Nhánh kết nối trực tiếp từ Cao tốc Bến Lức - Long Thành vào Trung tâm Cần Giờ
+      const interchangeLink = buildRegionalHighway([
+        new THREE.Vector3(-18, 1.6, -35),
+        new THREE.Vector3(-22, 1.2, -21),
+        new THREE.Vector3(-25, 0.72, -8.5)
+      ], 1.25, false, 4);
 
-      camera.position.set(
-        camState.target.x + camState.radius * Math.sin(camState.phi) * Math.sin(camState.theta),
-        camState.target.y + camState.radius * Math.cos(camState.phi),
-        camState.target.z + camState.radius * Math.sin(camState.phi) * Math.cos(camState.theta)
+      // Nút giao hoa thị 2 tầng Bến Lức - Long Thành (-18, -35)
+      const cloverLeaf = new THREE.Mesh(
+        new THREE.TorusGeometry(2.6, 0.36, 6, 28),
+        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7 })
       );
-      camera.lookAt(camState.target);
+      cloverLeaf.rotation.x = Math.PI / 2;
+      cloverLeaf.position.set(-18, 1.25, -35);
+      layerGroups.traffic.add(cloverLeaf);
 
-      // Update Live 2D Mini-Map Camera Dot
-      const camDot = document.getElementById('minimap-cam-dot');
-      if (camDot) {
-        camDot.setAttribute('cx', Math.max(-105, Math.min(105, camState.target.x)).toFixed(1));
-        camDot.setAttribute('cy', Math.max(-80, Math.min(65, camState.target.z)).toFixed(1));
-      }
+      // D. Chi tiết 4 Cửa Ngõ Vùng:
+      // 1) HƯỚNG QUẬN 1 (-8, -74): Chợ Bến Thành (Tháp đồng hồ mái ngói), Bitexco (Búp sen & sân đỗ trực thăng), Ga Metro Bến Thành
+      const q1Group = new THREE.Group();
+      q1Group.position.set(-8, 0.55, -74);
+      const q1Plaza = new THREE.Mesh(new THREE.CylinderGeometry(11, 11.5, 0.16, 28), new THREE.MeshStandardMaterial({ map: archTextures.plazaTile, roughness: 0.7 }));
+      q1Group.add(q1Plaza);
 
-      // 1. High-Speed Metro 350 km/h (5-Car Co-Axial Tangent Alignment)
-      if (metroCurve && trainCars.length > 0) {
-        trainProgress = (trainProgress + dt * 0.055) % 1;
-        trainCars.forEach((car, cIdx) => {
-          const u = (trainProgress - cIdx * metroArcStep + 1) % 1;
-          const pt = metroCurve.getPointAt(u);
-          const tangent = metroCurve.getTangentAt(u).normalize();
-          car.position.copy(pt);
-          car.lookAt(pt.clone().add(tangent));
-        });
-      }
+      // Chợ Bến Thành biểu tượng
+      const benThanhHall = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.6, 3.0), new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.55 }));
+      benThanhHall.position.set(-3.2, 0.85, 2.2);
+      const benThanhRoof = new THREE.Mesh(new THREE.ConeGeometry(2.8, 0.9, 4), new THREE.MeshStandardMaterial({ map: archTextures.roofTile, roughness: 0.6 }));
+      benThanhRoof.rotation.y = Math.PI / 4;
+      benThanhRoof.position.set(-3.2, 2.1, 2.2);
+      const clockTower = new THREE.Mesh(new THREE.BoxGeometry(0.95, 3.2, 0.95), new THREE.MeshStandardMaterial({ color: 0xfef08a }));
+      clockTower.position.set(-3.2, 1.65, 3.8);
+      const clockFace = new THREE.Mesh(new THREE.CircleGeometry(0.32, 16), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      clockFace.position.set(-3.2, 2.5, 4.29);
+      q1Group.add(benThanhHall, benThanhRoof, clockTower, clockFace);
 
-      // 2. Electric VinFast Vehicles
-      movingVehicles.forEach(v => {
-        v.t = (v.t + v.speed * v.dir + 1) % 1;
-        const pt = v.curve.getPointAt(v.t);
-        const tan = v.curve.getTangentAt(v.t).multiplyScalar(v.dir);
-        v.mesh.position.copy(pt);
-        v.mesh.lookAt(pt.clone().add(tan));
+      // Tháp Bitexco Financial Tower (búp sen nghiêng + sân đỗ trực thăng)
+      const bitexco = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 1.25, 12.5, 16), new THREE.MeshStandardMaterial({ map: archTextures.facade, color: 0x38bdf8, metalness: 0.8, roughness: 0.18 }));
+      bitexco.position.set(2.4, 6.25, -1.5);
+      const helipadDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.7, 0.16, 16), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      helipadDisc.position.set(3.4, 9.2, -1.5);
+      q1Group.add(bitexco, helipadDisc);
+
+      // Cụm cao ốc tài chính Quận 1
+      const skyMat = new THREE.MeshStandardMaterial({
+        map: archTextures.facade,
+        color: 0xe2e8f0,
+        emissive: 0xfef08a,
+        emissiveMap: archTextures.facade,
+        emissiveIntensity: 0.0,
+        roughness: 0.3
+      });
+      skyMat.userData = { isLitBuilding: true };
+      [[-6.5, -3.5, 9.5], [-2.5, -5.5, 11.0], [5.8, -4.0, 8.8], [6.2, 1.8, 7.6], [-6.8, 2.5, 6.8]].forEach(b => {
+        const tower = new THREE.Mesh(new THREE.BoxGeometry(1.8, b[2], 1.8), skyMat);
+        tower.position.set(b[0], b[2] / 2, b[1]);
+        q1Group.add(tower);
+      });
+      layerGroups.zones.add(q1Group);
+
+      // 2) HƯỚNG NHÀ BÈ / QUẬN 7 (-62, -48): Cầu Phú Mỹ dây văng đôi & Khu đô thị Hồ Bán Nguyệt Phú Mỹ Hưng
+      const q7Group = new THREE.Group();
+      q7Group.position.set(-62, 0.55, -48);
+      const q7Base = new THREE.Mesh(new THREE.CylinderGeometry(8.5, 9.0, 0.16, 24), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.75 }));
+      const crescentLake = new THREE.Mesh(new THREE.RingGeometry(1.6, 3.4, 24, 1, 0, Math.PI * 1.2), new THREE.MeshBasicMaterial({ color: 0x0ea5e9, side: THREE.DoubleSide }));
+      crescentLake.rotation.x = -Math.PI / 2;
+      crescentLake.position.set(0, 0.12, 0);
+      q7Group.add(q7Base, crescentLake);
+
+      // Tháp H đôi Cầu Phú Mỹ biểu tượng Quận 7
+      [-2.8, 2.8].forEach(px => {
+        const pylonH = new THREE.Mesh(new THREE.BoxGeometry(0.45, 7.2, 1.6), new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.5 }));
+        pylonH.position.set(px, 3.6, -3.5);
+        q7Group.add(pylonH);
+      });
+      [[-4.5, 2.5, 6.2], [-1.5, 4.2, 5.4], [2.2, 3.8, 6.8], [4.8, 1.5, 5.8], [3.5, -1.8, 4.8]].forEach(b => {
+        const bldg = new THREE.Mesh(new THREE.BoxGeometry(1.5, b[2], 1.5), skyMat);
+        bldg.position.set(b[0], b[2] / 2, b[1]);
+        q7Group.add(bldg);
+      });
+      layerGroups.zones.add(q7Group);
+
+      // 3) HƯỚNG SÂN BAY QUỐC TẾ LONG THÀNH & SIÊU CẢNG CẦN GIỜ (70, -56): Nhà ga hình hoa sen, 2 đường băng, đài kiểm soát không lưu & máy bay cất cánh
+      const ltGroup = new THREE.Group();
+      ltGroup.position.set(70, 0.55, -56);
+      const apron = new THREE.Mesh(new THREE.BoxGeometry(22, 0.16, 15), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 }));
+      ltGroup.add(apron);
+
+      // Hai đường băng song song có vạch trắng & đèn dẫn đường
+      [-4.8, 4.8].forEach(rz => {
+        const runway = new THREE.Mesh(new THREE.BoxGeometry(19.5, 0.06, 1.65), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.65 }));
+        runway.position.set(0, 0.12, rz);
+        ltGroup.add(runway);
+        const rwyLightMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8 });
+        lampBulbs.push(rwyLightMat);
+        for (let d = -8; d <= 8; d += 1.6) {
+          const mark = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.02, 0.12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+          mark.position.set(d, 0.16, rz);
+          const edgeL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), rwyLightMat);
+          edgeL.position.set(d, 0.17, rz - 0.85);
+          const edgeR = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), rwyLightMat);
+          edgeR.position.set(d, 0.17, rz + 0.85);
+          ltGroup.add(mark, edgeL, edgeR);
+        }
       });
 
-      // 3. Cruising Luxury Yachts in Paradise Lagoon
-      movingYachts.forEach(y => {
-        y.t = (y.t + y.speed) % 1;
-        const pt = y.curve.getPointAt(y.t);
-        const tan = y.curve.getTangentAt(y.t);
-        y.mesh.position.set(pt.x, 0.14 + Math.sin(elapsed * 2.5 + y.t * 10) * 0.02, pt.z);
-        y.mesh.lookAt(pt.clone().add(tan));
+      // Nhà ga hành khách cánh hoa sen & Tháp kiểm soát không lưu (ATC)
+      const lotusTerminal = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 4.2, 1.35, 12), new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.35, metalness: 0.7, roughness: 0.18 }));
+      lotusTerminal.scale.set(1.4, 1, 0.85);
+      lotusTerminal.position.set(0, 0.75, 0);
+      const atcTower = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.55, 6.8, 12), new THREE.MeshStandardMaterial({ color: 0xf8fafc }));
+      atcTower.position.set(-5.8, 3.4, 0);
+      const atcCab = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.55, 0.85, 12), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+      atcCab.position.set(-5.8, 7.0, 0);
+      ltGroup.add(lotusTerminal, atcTower, atcCab);
+
+      // Máy bay thương mại 3D chi tiết đậu tại ống lồng & bay vòng trên bầu trời Long Thành
+      const createDetailedAirplane = (scale = 1.0) => {
+        const plane = new THREE.Group();
+        const whiteBodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.35 });
+        const liveryBlueMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.25, metalness: 0.45 });
+        const goldAccentMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.3, metalness: 0.6 });
+        const darkGlassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 });
+
+        // Thân máy bay thuôn dọc trục +Z
+        const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.20, 2.15, 16), whiteBodyMat);
+        fuselage.rotation.x = Math.PI / 2;
+        plane.add(fuselage);
+
+        // Đường sơn trang trí & dải cửa sổ hành khách dọc thân
+        const bellyStripe = new THREE.Mesh(new THREE.CylinderGeometry(0.224, 0.204, 2.12, 16, 1, true), liveryBlueMat);
+        bellyStripe.rotation.x = Math.PI / 2;
+        bellyStripe.scale.set(1, 1, 0.45);
+        bellyStripe.position.y = -0.08;
+        plane.add(bellyStripe);
+
+        const winStrip = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.05, 1.55), new THREE.MeshBasicMaterial({ color: 0xfef9c3 }));
+        winStrip.position.set(0, 0.05, 0.05);
+        plane.add(winStrip);
+
+        // Mũi máy bay khí động học & kính buồng lái
+        const noseCone = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.68, 16), whiteBodyMat);
+        noseCone.rotation.x = Math.PI / 2;
+        noseCone.position.set(0, -0.02, 1.40);
+        const noseTip = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 8), darkGlassMat);
+        noseTip.position.set(0, -0.02, 1.70);
+        const cockpit = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8), darkGlassMat);
+        cockpit.scale.set(0.95, 0.65, 1.35);
+        cockpit.position.set(0, 0.08, 1.18);
+        plane.add(noseCone, noseTip, cockpit);
+
+        // Đuôi thuôn nhọn về phía -Z
+        const tailCone = new THREE.Mesh(new THREE.ConeGeometry(0.20, 0.72, 16), liveryBlueMat);
+        tailCone.rotation.x = -Math.PI / 2;
+        tailCone.position.set(0, 0.03, -1.42);
+        plane.add(tailCone);
+
+        // Đôi cánh chính sải rộng vuốt ngược (Swept Wings) + 2 động cơ turbine + winglets
+        [-1, 1].forEach(side => {
+          const wingShape = new THREE.Shape();
+          wingShape.moveTo(0, 0.42);
+          wingShape.lineTo(side * 1.68, -0.36);
+          wingShape.lineTo(side * 1.62, -0.54);
+          wingShape.lineTo(0, -0.18);
+          wingShape.closePath();
+
+          const wingGeo = new THREE.ExtrudeGeometry(wingShape, { steps: 1, depth: 0.045, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.01, bevelSegments: 1 });
+          wingGeo.rotateX(Math.PI / 2);
+          const wingMesh = new THREE.Mesh(wingGeo, whiteBodyMat);
+          wingMesh.position.set(side * 0.14, -0.03, 0.12);
+          plane.add(wingMesh);
+
+          // Winglet vểnh lên ở đầu mút cánh & đèn tín hiệu hàng không (Đỏ trái / Xanh phải)
+          const winglet = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.22, 0.16), liveryBlueMat);
+          winglet.position.set(side * 1.78, 0.07, -0.32);
+          winglet.rotation.z = -side * 0.28;
+          const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 6), new THREE.MeshBasicMaterial({ color: side === -1 ? 0xef4444 : 0x22c55e }));
+          navLight.position.set(side * 1.81, 0.17, -0.32);
+          plane.add(winglet, navLight);
+
+          // Động cơ phản lực dưới cánh (Nacelle + Lõi turbine phát sáng)
+          const engineGroup = new THREE.Group();
+          engineGroup.position.set(side * 0.68, -0.14, 0.18);
+          const nacelle = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.095, 0.56, 12), liveryBlueMat);
+          nacelle.rotation.x = Math.PI / 2;
+          const intakeRing = new THREE.Mesh(new THREE.TorusGeometry(0.105, 0.016, 8, 16), goldAccentMat);
+          intakeRing.position.z = 0.28;
+          const exhaustGlow = new THREE.Mesh(new THREE.CircleGeometry(0.08, 12), new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide }));
+          exhaustGlow.position.z = -0.285;
+          engineGroup.add(nacelle, intakeRing, exhaustGlow);
+          plane.add(engineGroup);
+
+          // Cánh đuôi ngang (Horizontal Stabilizer)
+          const hStab = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.03, 0.24), whiteBodyMat);
+          hStab.position.set(side * 0.34, 0.04, -1.46);
+          hStab.rotation.y = -side * 0.35;
+          plane.add(hStab);
+        });
+
+        // Cánh đuôi đứng (Vertical Stabilizer) biểu tượng hoa sen vàng
+        const vTailShape = new THREE.Shape();
+        vTailShape.moveTo(0, 0);
+        vTailShape.lineTo(-0.55, 0);
+        vTailShape.lineTo(-0.78, 0.72);
+        vTailShape.lineTo(-0.46, 0.72);
+        vTailShape.closePath();
+        const vTailGeo = new THREE.ExtrudeGeometry(vTailShape, { steps: 1, depth: 0.04, bevelEnabled: false });
+        vTailGeo.rotateY(Math.PI / 2);
+        const vTail = new THREE.Mesh(vTailGeo, liveryBlueMat);
+        vTail.position.set(-0.02, 0.12, -1.08);
+        const tailLogo = new THREE.Mesh(new THREE.CircleGeometry(0.14, 12), goldAccentMat);
+        tailLogo.rotation.y = Math.PI / 2;
+        tailLogo.position.set(0.025, 0.46, -1.55);
+        plane.add(vTail, tailLogo);
+
+        plane.scale.setScalar(scale);
+        return plane;
+      };
+
+      for (let ap = 0; ap < 3; ap++) {
+        if (ap < 2) {
+          const parkedPlane = createDetailedAirplane(0.95);
+          parkedPlane.position.set(-2.5 + ap * 5.0, 0.48, -2.4);
+          parkedPlane.rotation.y = Math.PI;
+          ltGroup.add(parkedPlane);
+        } else {
+          const flyingPlane = createDetailedAirplane(1.25);
+          layerGroups.traffic.add(flyingPlane);
+          movingAirplanes.push(flyingPlane);
+        }
+      }
+      layerGroups.zones.add(ltGroup);
+
+      // 4) HƯỚNG MIỀN TÂY — ĐBSCL (-106, -24): Cầu dây văng Cần Thơ / Mỹ Thuận, Chợ nổi & Cánh đồng lúa xanh vàng
+      const mtGroup = new THREE.Group();
+      mtGroup.position.set(-106, 0.55, -24);
+      const riceField1 = new THREE.Mesh(new THREE.BoxGeometry(14, 0.16, 16), new THREE.MeshStandardMaterial({ color: 0x65a30d, roughness: 0.88 }));
+      const riceField2 = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.18, 7.5), new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.85 }));
+      riceField2.position.set(-3.2, 0.02, 3.8);
+      const hauRiver = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.2, 16.5), new THREE.MeshBasicMaterial({ color: 0x0284c7 }));
+      hauRiver.position.set(1.8, 0.04, 0);
+      mtGroup.add(riceField1, riceField2, hauRiver);
+
+      // Tháp cầu dây văng Miền Tây & các ghe xuồng chợ nổi
+      [-3.5, 3.5].forEach(mz => {
+        const mPylon = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.38, 6.4, 8), new THREE.MeshStandardMaterial({ color: 0xf8fafc }));
+        mPylon.position.set(1.8, 3.2, mz);
+        mtGroup.add(mPylon);
       });
-
-      // 4. Ferris Wheel Rotation with Self-Leveling Cabins
-      if (ferrisWheelHub) {
-        ferrisWheelHub.rotation.z += dt * 0.25;
-        ferrisCabins.forEach(c => {
-          c.mesh.rotation.z = -ferrisWheelHub.rotation.z;
-        });
+      for (let bt = 0; bt < 8; bt++) {
+        const boat = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.85), new THREE.MeshStandardMaterial({ color: bt % 2 === 0 ? 0x92400e : 0xf97316 }));
+        boat.position.set(1.0 + (bt % 3) * 0.75, 0.18, -5.5 + bt * 1.5);
+        boat.rotation.y = (bt % 3) * 0.25;
+        mtGroup.add(boat);
       }
+      layerGroups.zones.add(mtGroup);
 
-      // 5. Night Fireworks Animation
-      if (fireworksActive && fireworksGroup) {
-        fireworksGroup.children.forEach(cloud => {
-          const cycle = (elapsed * 0.75 + cloud.userData.phase) % 1;
-          const sc = 0.25 + cycle * 1.15;
-          cloud.scale.setScalar(sc);
-          cloud.material.opacity = Math.max(0, 1 - cycle * 1.1);
-        });
-      }
+      // 5. Vũng Tàu Coastal Tourism Peninsula & Skyline
+      const vungTauLandPts = [
+        [75, 45], [88, 41], [104, 46], [108, 60], [95, 68], [78, 63], [73, 52]
+      ];
+      const vtPeninsula = createExtrudedLand(vungTauLandPts, 0.65, 0x2e6f40, 0.0, 0.88);
+      const vtGoldenBeach = createExtrudedLand([[74, 46], [85, 43], [83, 45], [75, 51]], 0.68, 0xfde68a, 0.02, 0.9);
+      const vtHill = new THREE.Mesh(new THREE.ConeGeometry(6.5, 4.2, 16), new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.9 }));
+      vtHill.position.set(93, 2.5, 57);
+      layerGroups.zones.add(vtPeninsula, vtGoldenBeach, vtHill);
 
-      updateHotspotPositions();
-      renderer.render(scene, camera);
-    }
+      const vtPlaza = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.8, 0.15, 24), new THREE.MeshStandardMaterial({ map: archTextures.plazaTile, roughness: 0.6 }));
+      vtPlaza.position.set(80.5, 0.72, 48.5);
+      const vtPier = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.18, 4.2), new THREE.MeshStandardMaterial({ color: 0x92400e }));
+      vtPier.position.set(76.5, 0.32, 46.2);
+      vtPier.rotation.y = 0.75;
+      layerGroups.zones.add(vtPlaza, vtPier);
 
-    window.onload = function () {
-      init3DScene();
-      selectTrainingModule(0, false);
-      selectPersona(0);
-      updateROICalculator();
-      renderQuizUI();
-      buildBottomWaypoints();
-      animate();
-    };
-  </script>
-</body>
-</html>
+      const vtGrp = new THREE.Group();
+      for (let i = 0; i < 16; i++) {
+        const bx = 86 + ((i * 19) % 16) - 8;
+        const bz = 53 + ((i * 29) % 16) - 8;
+        const bh = 2.6 + (i % 5) * 1.7;
+        const bMesh = new THREE.Mesh(new THREE.BoxGeometry(1.75,
