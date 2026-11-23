@@ -3058,15 +3058,27 @@
       renderer.render(scene, camera);
     }
 
-    window.onload = function () {
-      init3DScene();
-      selectTrainingModule(0, false);
-      selectPersona(0);
-      updateROICalculator();
-      renderQuizUI();
-      buildBottomWaypoints();
-      animate();
-    };
+    function startApplication() {
+      if (window.__vgpInitialized) return;
+      window.__vgpInitialized = true;
+      try {
+        init3DScene();
+        selectTrainingModule(0, false);
+        selectPersona(0);
+        updateROICalculator();
+        renderQuizUI();
+        buildBottomWaypoints();
+        animate();
+      } catch (err) {
+        console.error('Lỗi khởi tạo sa bàn 3D:', err);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startApplication);
+    } else {
+      startApplication();
+    }
   </script>
 </body>
 </html>
